@@ -4,9 +4,11 @@ import ma.glasnost.orika.impl.DefaultMapperFactory;
 import me.toyproejct.mia.*;
 import me.toyproejct.mia.domain.*;
 import me.toyproejct.mia.exception.DataNotFoundException;
+import me.toyproejct.mia.exception.NotAuthorizedUserException;
 import net.rakugakibox.spring.boot.orika.OrikaAutoConfiguration;
 import net.rakugakibox.spring.boot.orika.OrikaMapperFactoryBuilderConfigurer;
 import net.rakugakibox.spring.boot.orika.OrikaMapperFactoryConfigurer;
+import org.apache.catalina.Host;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -24,6 +26,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,24 +48,27 @@ public class EventServiceTest {
     private EventService eventService;
     @Mock
     private EventRepository eventRepository;
-
     @Spy
-    private MapperFacade orikaMapperFacade ;
+    private static MapperFacade orikaMapperFacade;
 
     private final Account account  = constructAccount("abd@abd.com");
     private final Event e1 = constructEvent(1L, "test1");
     private final Event e2 = constructEvent(2L, "test2");
-    @Before
-    public void init(){
+    private final Event enrolledEvents = constructEvent(3L, "test3");
+
+    @BeforeClass
+    public static void init(){
         MapperFactory factory = new DefaultMapperFactory.Builder()
                 .useBuiltinConverters(true)
                 .useAutoMapping(true)
                 .mapNulls(false).build();
-//        factory.classMap(Event.class, EventDto.class).byDefault().register();
-//        factory.classMap(Event.class, EventDetailDto.class).byDefault().register();
         orikaMapperFacade = factory.getMapperFacade();
-
-
+    }
+    @Test
+    public void test_map3(){
+      EventDto dto = orikaMapperFacade.map(e1, EventDto.class);
+      assertThat(dto.getId()).isEqualTo(e1.getId());
+      assertThat(dto.getTitle()).isEqualTo(e1.getTitle());
     }
 
     @Test
@@ -110,13 +116,71 @@ public class EventServiceTest {
         EventDetailDto dto = eventService.findById(-1L);
     }
 
+    @Test
+    public void 특정_이벤트를_등록자가_수정한다(){
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
+        EventDto modifyDto = constructEventDto();
+
+        HostDto hostDto = new HostDto();
+        hostDto.setEmail(e1.getHost().getEmail());
+
+        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
+        EventDto result = eventService.modifyEvent(e1.getId(), detailDto);
+
+        assertThat(result.getId()).isEqualTo(e1.getId());
+        assertThat(result.getTitle()).isEqualTo(modifyDto.getTitle());
+        assertThat(result.getContent()).isEqualTo(modifyDto.getContent());
+        assertThat(result.getEventOpenPriod()).isEqualTo(modifyDto.getEventOpenPriod());
+        assertThat(result.getRegisterOpenPeriod()).isEqualTo(modifyDto.getRegisterOpenPeriod());
+        assertThat(result.getPrice()).isEqualTo(modifyDto.getPrice());
+        assertThat(result.getMaxPeopleCnt()).isEqualTo(modifyDto.getMaxPeopleCnt());
+    }
+
+    @Test(expected = NotAuthorizedUserException.class)
+    public void 등록자가_아닌데_수정할_경우_에러발생() throws InvocationTargetException, IllegalAccessException {
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
+        EventDto modifyDto = constructEventDto();
+
+        HostDto hostDto = new HostDto();
+        hostDto.setEmail("randomemail@email.com");
+
+        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
+        EventDto result = eventService.modifyEvent(e1.getId(), detailDto);
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void 참석가능인원은_현재_참여자수보다_적을수없다() throws InvocationTargetException, IllegalAccessException {
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
+        EventDto modifyDto = constructEventDto();
+        modifyDto.setMaxPeopleCnt(e1.getEnrolledGuestIds().size() - 1);
+
+        HostDto hostDto = new HostDto();
+        hostDto.setEmail(e1.getHost().getEmail());
+
+        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
+        EventDto result = eventService.modifyEvent(e1.getId(), detailDto);
+
+    }
+    private EventDto constructEventDto() {
+        EventDto modifyDto = new EventDto();
+        modifyDto.setContent("수정된 내용");
+        modifyDto.setTitle("수정된 제목");
+        modifyDto.setLocation("수정된 장소");
+        modifyDto.setEventOpenPriod(new Period(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(5)));
+        modifyDto.setRegisterOpenPeriod(new Period(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(5)));
+        modifyDto.setPrice(e1.getPrice() + 1000L);
+        modifyDto.setMaxPeopleCnt(e1.getMaxPeopleCnt() + 1);
+        return modifyDto;
+    }
+
     private Account constructAccount(String email) {
         return Account.builder().email(email).name("NAME").build();
     }
 
     private Event constructEvent(Long id, String title) {
-        Period register = new Period(LocalDateTime.now().minusDays(1), LocalDateTime.now().plus(Duration.ofDays(2)));
-        Period open = new Period(LocalDateTime.now().plus(Duration.ofDays(3)), LocalDateTime.now().plus(Duration.ofDays(5)));
+        Period register = new Period(LocalDateTime.now().plusDays(10), LocalDateTime.now().plusDays(15));
+        Period open = new Period(LocalDateTime.now().plusDays(20), LocalDateTime.now().plusDays(25));
         return Event.builder()
                 .id(id)
                 .title(title)
@@ -127,6 +191,7 @@ public class EventServiceTest {
                 .price(1000)
                 .location("SOMEWHERE")
                 .host(account)
+
                 .build();
     }
 }

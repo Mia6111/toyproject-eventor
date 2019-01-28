@@ -10,9 +10,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import java.util.Objects;
 
 @Entity
-@NoArgsConstructor @Getter @Setter(AccessLevel.PRIVATE)
+@NoArgsConstructor @Getter @Setter
 public class Account extends AuditingEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,13 +27,17 @@ public class Account extends AuditingEntity{
 
 
     @Builder
-    public Account(String email, String name) {
+    public Account(Long id, String email, String name) {
         if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name)){
             throw new IllegalArgumentException("email과 name은 빈 값이 아니여야 합니다");
         }
         //이메일 정규식
-
+        this.id = id;
         this.email = email;
         this.name = name;
+    }
+
+    public boolean isSameHost(Account host) {
+        return Objects.equals(host.email, this.email);
     }
 }

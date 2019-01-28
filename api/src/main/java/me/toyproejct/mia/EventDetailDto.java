@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import me.toyproejct.mia.domain.Account;
 import me.toyproejct.mia.domain.Event;
 
 @NoArgsConstructor @Getter @Setter

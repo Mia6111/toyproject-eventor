@@ -20,4 +20,10 @@ public class LibTest {
         softAssertions.assertThat( Duration.between(LocalDateTime.now().toInstant(ZoneOffset.UTC),
                 LocalDateTime.now().plusDays(3).toInstant(ZoneOffset.UTC))).isEqualTo(Duration.ofDays(3));
     }
+
+
+    @Test
+    public void test_compareTo(){
+       assertThat(LocalDateTime.now().compareTo(LocalDateTime.now().plusMinutes(1))).isEqualTo(-1);
+    }
 }

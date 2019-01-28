@@ -1,5 +1,6 @@
 package me.toyproejct.mia.domain;
 
+import com.google.common.base.Objects;
 import lombok.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Embeddable
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @ToString
 public class Period {
@@ -33,11 +34,25 @@ public class Period {
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
 
-    public boolean isBefore(Period otherPeriod) {
-        return this.endDate.isBefore(otherPeriod.startDate);
+    public boolean isBeforeOtherPeriodEnd(Period otherPeriod) {
+        return this.endDate.isBefore(otherPeriod.endDate);
     }
 
     public Duration diffDuration(Period latter) {
         return Duration.between(this.endDate.toInstant(ZoneOffset.UTC), latter.startDate.toInstant(ZoneOffset.UTC));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Period period = (Period) o;
+        return Objects.equal(startDate, period.startDate) &&
+                Objects.equal(endDate, period.endDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(startDate, endDate);
     }
 }
