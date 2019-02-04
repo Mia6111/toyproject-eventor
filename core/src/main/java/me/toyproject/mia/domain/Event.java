@@ -36,7 +36,6 @@ public class Event extends AuditingEntity {
     })
     @NotNull
     private Period registerOpenPeriod;
-
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(column = @Column(name = "event_start_date"), name = "startDate"),
