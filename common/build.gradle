@@ -6,12 +6,13 @@ jar {
 }
 
 dependencies {
-
-    compileOnly('org.projectlombok:lombok')
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-logging', version: '2.1.2.RELEASE'
     compile('net.rakugakibox.spring.boot:orika-spring-boot-starter:1.8.0')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     compile group: 'com.google.guava', name: 'guava', version: '11.0.2'
 //    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     testCompile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.2'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+
 
 }

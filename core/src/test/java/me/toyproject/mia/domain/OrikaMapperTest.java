@@ -3,15 +3,12 @@ package me.toyproject.mia.domain;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
-import me.toyproejct.mia.CoreApplicatoin;
-import me.toyproejct.mia.domain.Event;
+import me.toyproject.mia.CoreApplicatoin;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.naming.event.EventDirContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

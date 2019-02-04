@@ -1,6 +1,5 @@
 package me.toyproject.mia.domain;
 
-import me.toyproejct.mia.domain.Period;
 import org.junit.Test;
 
 import java.time.Duration;

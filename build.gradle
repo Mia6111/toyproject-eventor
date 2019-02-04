@@ -63,13 +63,6 @@ subprojects {
 
 }
 
-project(':web') {
-    dependencies {
-        compile project(':api')
-        compile project(':common')
-    }
-}
-
 project(':api') {
     dependencies {
         compile project(':core')

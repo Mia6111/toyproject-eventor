@@ -1,13 +1,11 @@
 package me.toyproject.mia.domain;
 
-import me.toyproejct.mia.CoreApplicatoin;
-import me.toyproejct.mia.domain.*;
+import me.toyproject.mia.CoreApplicatoin;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,6 +54,6 @@ public class EventRepositoryTest {
 
     @Test
     public void test_findAllRegisterOpenNow(){
-        Page<Event> events = eventRepository.findAllRegisterOpenNow(PageRequest.of(0, 20));
+        Page<Event> events = eventRepository.findAllRegisterOpenNow(LocalDateTime.now(), PageRequest.of(0, 20));
     }
 }

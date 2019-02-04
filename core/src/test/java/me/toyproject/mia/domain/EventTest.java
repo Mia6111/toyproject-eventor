@@ -1,8 +1,6 @@
 package me.toyproject.mia.domain;
 
-import me.toyproejct.mia.domain.Account;
-import me.toyproejct.mia.domain.Event;
-import me.toyproejct.mia.domain.Period;
+import me.toyproject.mia.exception.EventException;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -11,7 +9,7 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventTest {
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EventException.class)
     public void 생성자_테스트_성공(){
         LocalDateTime from = LocalDateTime.now().minusMonths(1).minusDays(1);
 

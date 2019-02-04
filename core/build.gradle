@@ -4,5 +4,5 @@ dependencies {
     runtime('com.h2database:h2')
     compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
     testCompile('org.springframework.boot:spring-boot-starter-test')
-    
+    compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 }

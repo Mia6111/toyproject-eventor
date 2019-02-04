@@ -1,9 +1,11 @@
+package me.toyproject.mia;
+
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import me.toyproejct.mia.ApiApplication;
-import me.toyproejct.mia.EventService;
+import me.toyproejct.mia.service.EventService;
 import me.toyproject.mia.domain.Account;
 import me.toyproject.mia.domain.Event;
 import me.toyproject.mia.domain.EventRepository;
@@ -12,6 +14,7 @@ import me.toyproject.mia.dto.EventDetailDto;
 import me.toyproject.mia.dto.EventDto;
 import me.toyproject.mia.dto.HostDto;
 import me.toyproject.mia.exception.DataNotFoundException;
+import me.toyproject.mia.exception.NotAuthorizedUserException;
 import org.assertj.core.util.Lists;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,7 +40,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(classes = {ApiApplication.class})
 @Slf4j
 public class EventServiceTest {
-//    Logger logger = LoggerFactory.getLogger(EventServiceTest.class.toString());
+//    Logger logger = LoggerFactory.getLogger(me.toyproject.mia.EventServiceTest.class.toString());
 
     @InjectMocks
     private EventService eventService;
@@ -46,7 +49,7 @@ public class EventServiceTest {
     @Spy
     private static MapperFacade orikaMapperFacade;
 
-    private final Account account  = constructAccount("abd@abd.com");
+    private final Account account  = MockBuilder.constructAccount("abd@abd.com");
     private final Event e1 = MockBuilder.constructEvent(1L, "test1");
     private final Event e2 = MockBuilder.constructEvent(2L, "test2");
     private final Event enrolledEvents = MockBuilder.constructEvent(3L, "test3");
@@ -64,7 +67,7 @@ public class EventServiceTest {
     @Test
     public void 이벤트를_생성한다() {
         when(eventRepository.save(any(Event.class))).thenReturn(e1);
-        EventDto createdEvent = eventService.create(e1);
+        EventDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
 
         log.debug("eventDto {}", createdEvent);
         assertThat(createdEvent.getId()).isNotNull();
@@ -74,7 +77,7 @@ public class EventServiceTest {
     public void 유효하지않은_이벤트를_생성할_경우_익셉션() {
         Event event = Event.builder()
                 .title(null).build();
-        EventDto createdEvent = eventService.create(event);
+        EventDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
     }
 
     @Test
@@ -115,8 +118,9 @@ public class EventServiceTest {
         hostDto.setEmail(e1.getHost().getEmail());
 
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDto result = eventService.modifyEvent(e1.getId(), detailDto);
+        EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), detailDto);
 
+        EventDto result = eventDetailDto.getEventDto();
         assertThat(result.getId()).isEqualTo(e1.getId());
         assertThat(result.getTitle()).isEqualTo(modifyDto.getTitle());
         assertThat(result.getContent()).isEqualTo(modifyDto.getContent());
@@ -124,6 +128,32 @@ public class EventServiceTest {
         assertThat(result.getRegisterOpenPeriod()).isEqualTo(modifyDto.getRegisterOpenPeriod());
         assertThat(result.getPrice()).isEqualTo(modifyDto.getPrice());
         assertThat(result.getMaxPeopleCnt()).isEqualTo(modifyDto.getMaxPeopleCnt());
+    }
+
+    @Test
+    public void 특정이벤트를_등록자가_삭제한다(){
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
+        modifyDto = constructEventDto();
+
+        HostDto hostDto = new HostDto();
+        hostDto.setEmail(e1.getHost().getEmail());
+
+        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
+        EventDto result = eventService.deleteEvent(e1.getId(), hostDto);
+
+        assertThat(result.getId()).isEqualTo(e1.getId());
+    }
+
+    @Test(expected = NotAuthorizedUserException.class)
+    public void 특정이벤트를_등록자가_아닌_다른이가_삭제할경우_에러(){
+        when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
+        modifyDto = constructEventDto();
+
+        HostDto hostDto = new HostDto();
+        hostDto.setEmail("invalid@email.com");
+
+        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
+        EventDto result = eventService.deleteEvent(e1.getId(), hostDto);
     }
 
     private EventDto constructEventDto() {
