@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Duration;
@@ -18,7 +19,6 @@ import java.util.List;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = CoreApplicatoin.class)
 public class EventRepositoryTest {
-    Logger logger = LoggerFactory.getLogger(this.getClass().getName());
     @Autowired
     private EventRepository eventRepository;
 
@@ -27,7 +27,8 @@ public class EventRepositoryTest {
     @Test
     public void test_create(){
 
-        Account account = accountRepository.save(Account.builder().email("abcdef@aa.com").name("테스트야").build());
+        Account account = Account.builder().email("abcdef@aa.com").name("테스트야").password("PASS").passwordEncoder(new BCryptPasswordEncoder()).build();
+        account = accountRepository.save(account);
         Period register = new Period(LocalDateTime.now().plus(Duration.ofDays(1)), LocalDateTime.now().plus(Duration.ofDays(3)));
         Period open = new Period(LocalDateTime.now().plus(Duration.ofDays(3)), LocalDateTime.now().plus(Duration.ofDays(5)));
 
@@ -44,7 +45,6 @@ public class EventRepositoryTest {
 
         e = eventRepository.save(e);
 
-        logger.debug("event {}", e);
     }
 
     @Test

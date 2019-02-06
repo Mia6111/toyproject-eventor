@@ -1,6 +1,12 @@
-package me.toyproejct.mia.service;
+package me.toyproject.mia.service;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
 import ma.glasnost.orika.MapperFacade;
+import me.toyproject.mia.persistence.ApiAuth;
+import me.toyproject.mia.domain.Account;
+import me.toyproject.mia.domain.AccountRepository;
 import me.toyproject.mia.domain.Event;
 import me.toyproject.mia.domain.EventRepository;
 import me.toyproject.mia.dto.EventDetailDto;
@@ -8,24 +14,28 @@ import me.toyproject.mia.dto.EventDto;
 import me.toyproject.mia.dto.HostDto;
 import me.toyproject.mia.exception.DataNotFoundException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor @Setter(AccessLevel.PACKAGE)
 public class EventService {
-    @Autowired
+
     private EventRepository eventRepository;
-    @Autowired
+    private AccountRepository accountRepository;
     private MapperFacade orikaMapperFacade;
+
+    @Resource(name=ApiAuth.REQUEST_SCOPE_BEAN_KEY)
+    private ApiAuth apiAuth;
+
 
     public List<EventDto> findAllEvents() {
         List<Event> events = eventRepository.findAllRegisterOpenNow(LocalDateTime.now());
@@ -46,32 +56,32 @@ public class EventService {
 
     @Transactional
     public EventDto create(EventDto eventDto) {
-        Event createdEvent = eventRepository.save(eventDto.toDomain());
-        System.out.println("id :" + createdEvent.getId());
-        return createDto(createdEvent);
+        final Account account = apiAuth.getAccount();
+        Event createdEvent = eventRepository.save(eventDto.toDomain(account));
+        return createEventDto(createdEvent);
     }
 
     @Transactional
     public EventDetailDto modifyEvent(Long id, EventDetailDto modifyDto) {
         Event event = findEventById(id);
-        event.update(modifyDto.getHostDto().toDomain(), modifyDto.getEventDto().toDomain());
-        EventDto updateEventDto = createDto(event);
-        return new EventDetailDto(id, updateEventDto, modifyDto.getHostDto());
+        event.update(modifyDto.toDomain(apiAuth.getAccount()));
+        return createEventDetailDto(event);
     }
 
     @Transactional
-    public EventDto deleteEvent(Long id, HostDto hostDto) {
+    public EventDto deleteEvent(Long id) {
         Event event = findEventById(id);
-
-        if(!event.isHostedBy(hostDto.toDomain())){
-           throw new NotAuthorizedUserException("권한이 없는 유저입니다");
-        }
-        event.delete();
-        return createDto(event);
+        event.delete(apiAuth.getAccount());
+        return createEventDto(event);
     }
 
-    private EventDto createDto(Event event) {
+    private EventDto createEventDto(Event event) {
         return orikaMapperFacade.map(event, EventDto.class);
+    }
+    private EventDetailDto createEventDetailDto(Event event) {
+        EventDetailDto dto = orikaMapperFacade.map(event, EventDetailDto.class);
+        dto.setHostDto(orikaMapperFacade.map(event.getHost(), HostDto.class));
+        return dto;
     }
 
     private Event findEventById(Long id) {

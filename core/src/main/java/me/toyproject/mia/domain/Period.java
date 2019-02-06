@@ -1,5 +1,6 @@
 package me.toyproject.mia.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.Objects;
 import lombok.*;
 
@@ -16,9 +17,11 @@ import java.time.ZoneOffset;
 public class Period {
 
     @Column(name="start_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", locale = "ko")
     private LocalDateTime startDate;
 
     @Column(name="end_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", locale = "ko")
     private LocalDateTime endDate;
 
     public Period(LocalDateTime startDate, LocalDateTime endDate) {
@@ -33,7 +36,7 @@ public class Period {
         return now.isAfter(startDate) && now.isBefore(endDate);
     }
 
-    public boolean isBeforeOtherPeriodEnd(Period otherPeriod) {
+    boolean isBeforeOtherPeriodEnd(Period otherPeriod) {
         return this.endDate.isBefore(otherPeriod.endDate);
     }
 

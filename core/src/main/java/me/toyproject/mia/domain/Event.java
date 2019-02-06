@@ -3,12 +3,14 @@ package me.toyproject.mia.domain;
 import lombok.*;
 import me.toyproject.mia.exception.EventException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.hibernate.annotations.Where;
 import org.springframework.util.Assert;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +20,7 @@ import java.util.Set;
 @ToString @EqualsAndHashCode(callSuper = false)
 @Where(clause = "deleted = false")
 public class Event extends AuditingEntity {
-    static final Duration MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD = Duration.ofDays(30);
+    static final int MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD = 30;
     static final int MIN_DAYS_BEFORE_UPDATE = 7;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,19 +58,23 @@ public class Event extends AuditingEntity {
     private String location;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name="account_id", referencedColumnName = "id")
+    @JoinColumn(name="host_account_id", referencedColumnName = "id")
     private Account host;
 
     @ElementCollection
-    @CollectionTable(name="Enrollement", joinColumns = @JoinColumn(name="id", referencedColumnName = "eventId"))
-    private Set<Long> enrolledGuestIds= new HashSet();
+    @CollectionTable(name="event_guest_enrollments", joinColumns = @JoinColumn(name="id"))
+    private Set<Long> enrolledGuestIds = new HashSet<>();
 
     @Builder
-    public Event(Long id,@NonNull String title, @NonNull String content, @NonNull Period registerOpenPeriod, @NonNull Period eventOpenPriod, int maxPeopleCnt, int price, @NonNull String location, @NonNull Account host) {
+    public Event(Long id, String title, String content, Period registerOpenPeriod, Period eventOpenPriod, int maxPeopleCnt, int price, String location, Account host) {
+        //?
+        if(!ObjectUtils.allNotNull(title, content, registerOpenPeriod, eventOpenPriod, maxPeopleCnt, price, location)){
+            throw new EventException("필수 필드값 입력하십시오");
+        }
         if(eventOpenPriod.isBeforeOtherPeriodEnd(registerOpenPeriod)){
             throw new EventException("eventOpenPriod 끝 시간은 registerOpenPeriod 끝 시간보다 먼저여야 합니다");
         }
-        if(MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD.compareTo((eventOpenPriod.diffDuration(registerOpenPeriod))) == -1){
+        if(eventOpenPriod.getStartDate().compareTo(LocalDateTime.now().plusDays(MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD)) > 0){
             throw new EventException("등록시간을 기준으로 이벤트는 1달(포함)안에 시작이 되어야 합니다");
         }
         if(price < 0 || price > 200000){
@@ -96,12 +102,11 @@ public class Event extends AuditingEntity {
         return registerOpenPeriod.isOngoing(LocalDateTime.now());
     }
 
-    public void update(Account host, Event event){
-        Assert.notNull(host, "host는 필수입니다");
+    public void update(Event event){
         Assert.notNull(event, "event는 필수입니다");
 
         //invariant
-        if(!isHostedBy(host)){
+        if(!isHostedBy(event.getHost())){
             throw new NotAuthorizedUserException( "권한이 없는 유저입니다");
         }
         if(!isUpdatable()){
@@ -144,7 +149,7 @@ public class Event extends AuditingEntity {
 
     }
 
-    public boolean isHostedBy(Account host) {
+    boolean isHostedBy(Account host) {
         return this.host != null && this.host.isSameHost(host);
 
     }
@@ -158,13 +163,13 @@ public class Event extends AuditingEntity {
     }
 
     boolean isDeletable() {
-        if(this.enrolledGuestIds.size() > 0){
-            return false;
-        }
-        return true;
+        return this.enrolledGuestIds.size() == 0;
     }
 
-    public void delete() {
+    public void delete(Account account) {
+        if(account == null || !isHostedBy(account)){
+            throw new NotAuthorizedUserException("권한이 없는 사용자입니다");
+        }
         if(!isDeletable()){
             throw new EventException("삭제할 수 없습니다");
         }

@@ -1,6 +1,8 @@
 package me.toyproject.mia.dto;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,7 +15,9 @@ import java.time.LocalDateTime;
 @Slf4j
 @Getter @Setter
 @ToString
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class EventDto {
+    @JsonIgnore
     private Long id;
     private String title;
     private String content;
@@ -24,13 +28,11 @@ public class EventDto {
     private int price;
     private String location;
 
-    private int enrolledGuestCnt;
-
     public boolean isRegisterOpen() {
         return registerOpenPeriod.isOngoing(LocalDateTime.now());
     }
 
-    public Event toDomain(){
+    public Event toDomain(Account account){
         return Event.builder()
                 .id(this.id)
                 .title(this.title)
@@ -40,7 +42,7 @@ public class EventDto {
                 .registerOpenPeriod(this.registerOpenPeriod)
                 .price(this.price)
                 .location(this.location)
-                .host(new Account())
+                .host(account)
                 .build();
     }
 }

@@ -1,11 +1,11 @@
-package me.toyproject.mia;
+package me.toyproject.mia.service;
 
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
-import me.toyproejct.mia.ApiApplication;
-import me.toyproejct.mia.service.EventService;
+import me.toyproject.mia.ApiApplication;
+import me.toyproject.mia.MockBuilder;
 import me.toyproject.mia.domain.Account;
 import me.toyproject.mia.domain.Event;
 import me.toyproject.mia.domain.EventRepository;
@@ -14,8 +14,11 @@ import me.toyproject.mia.dto.EventDetailDto;
 import me.toyproject.mia.dto.EventDto;
 import me.toyproject.mia.dto.HostDto;
 import me.toyproject.mia.exception.DataNotFoundException;
+import me.toyproject.mia.exception.EventException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
+import me.toyproject.mia.persistence.ApiAuth;
 import org.assertj.core.util.Lists;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +28,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,13 +38,13 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 @SpringBootTest(classes = {ApiApplication.class})
 @Slf4j
 public class EventServiceTest {
-//    Logger logger = LoggerFactory.getLogger(me.toyproject.mia.EventServiceTest.class.toString());
 
     @InjectMocks
     private EventService eventService;
@@ -49,10 +53,13 @@ public class EventServiceTest {
     @Spy
     private static MapperFacade orikaMapperFacade;
 
+    @Mock(name= ApiAuth.REQUEST_SCOPE_BEAN_KEY)
+    private ApiAuth apiAuth;
+
     private final Account account  = MockBuilder.constructAccount("abd@abd.com");
-    private final Event e1 = MockBuilder.constructEvent(1L, "test1");
-    private final Event e2 = MockBuilder.constructEvent(2L, "test2");
-    private final Event enrolledEvents = MockBuilder.constructEvent(3L, "test3");
+    private final Event e1 = MockBuilder.constructEvent(1L, "test1", account);
+    private final Event e2 = MockBuilder.constructEvent(2L, "test2", account);
+    private final Event enrolledEvents = MockBuilder.constructEvent(3L, "test3", account);
     private EventDto modifyDto;
 
     @BeforeClass
@@ -64,6 +71,10 @@ public class EventServiceTest {
         orikaMapperFacade = factory.getMapperFacade();
     }
 
+    @Before
+    public void setup(){
+        given(apiAuth.getAccount()).willReturn(account);
+    }
     @Test
     public void 이벤트를_생성한다() {
         when(eventRepository.save(any(Event.class))).thenReturn(e1);
@@ -73,7 +84,7 @@ public class EventServiceTest {
         assertThat(createdEvent.getId()).isNotNull();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EventException.class)
     public void 유효하지않은_이벤트를_생성할_경우_익셉션() {
         Event event = Event.builder()
                 .title(null).build();
@@ -98,8 +109,8 @@ public class EventServiceTest {
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
         EventDetailDto dto = eventService.findById(e1.getId());
-        assertThat(dto.getEventId()).isEqualTo(e1.getId());
-        assertThat(dto.getEventDto().getTitle()).isEqualTo(e1.getTitle());
+        assertThat(dto.getId()).isEqualTo(e1.getId());
+        assertThat(dto.getTitle()).isEqualTo(e1.getTitle());
         assertThat(dto.getHostDto().getEmail()).isEqualTo(e1.getHost().getEmail());
     }
 
@@ -120,14 +131,13 @@ public class EventServiceTest {
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
         EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), detailDto);
 
-        EventDto result = eventDetailDto.getEventDto();
-        assertThat(result.getId()).isEqualTo(e1.getId());
-        assertThat(result.getTitle()).isEqualTo(modifyDto.getTitle());
-        assertThat(result.getContent()).isEqualTo(modifyDto.getContent());
-        assertThat(result.getEventOpenPriod()).isEqualTo(modifyDto.getEventOpenPriod());
-        assertThat(result.getRegisterOpenPeriod()).isEqualTo(modifyDto.getRegisterOpenPeriod());
-        assertThat(result.getPrice()).isEqualTo(modifyDto.getPrice());
-        assertThat(result.getMaxPeopleCnt()).isEqualTo(modifyDto.getMaxPeopleCnt());
+        assertThat(eventDetailDto.getId()).isEqualTo(e1.getId());
+        assertThat(eventDetailDto.getTitle()).isEqualTo(modifyDto.getTitle());
+        assertThat(eventDetailDto.getContent()).isEqualTo(modifyDto.getContent());
+        assertThat(eventDetailDto.getEventOpenPriod()).isEqualTo(modifyDto.getEventOpenPriod());
+        assertThat(eventDetailDto.getRegisterOpenPeriod()).isEqualTo(modifyDto.getRegisterOpenPeriod());
+        assertThat(eventDetailDto.getPrice()).isEqualTo(modifyDto.getPrice());
+        assertThat(eventDetailDto.getMaxPeopleCnt()).isEqualTo(modifyDto.getMaxPeopleCnt());
     }
 
     @Test
@@ -139,13 +149,14 @@ public class EventServiceTest {
         hostDto.setEmail(e1.getHost().getEmail());
 
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDto result = eventService.deleteEvent(e1.getId(), hostDto);
+        EventDto result = eventService.deleteEvent(e1.getId());
 
         assertThat(result.getId()).isEqualTo(e1.getId());
     }
 
     @Test(expected = NotAuthorizedUserException.class)
     public void 특정이벤트를_등록자가_아닌_다른이가_삭제할경우_에러(){
+        given(apiAuth.getAccount()).willReturn(new Account(6L, "any@email.com", "anyname", "pass123"));
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
 
@@ -153,7 +164,7 @@ public class EventServiceTest {
         hostDto.setEmail("invalid@email.com");
 
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDto result = eventService.deleteEvent(e1.getId(), hostDto);
+        EventDto result = eventService.deleteEvent(e1.getId());
     }
 
     private EventDto constructEventDto() {

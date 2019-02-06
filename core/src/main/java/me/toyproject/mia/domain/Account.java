@@ -1,6 +1,9 @@
 package me.toyproject.mia.domain;
 
+import javax.persistence.Column;
 import lombok.*;
+import me.toyproject.mia.exception.AccountCreateException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 
 import javax.persistence.Entity;
@@ -12,8 +15,8 @@ import javax.validation.constraints.NotEmpty;
 import java.util.Objects;
 
 @Entity
-@NoArgsConstructor @Getter @Setter
-public class Account extends AuditingEntity{
+@NoArgsConstructor @Getter @Setter @ToString
+public class Account extends AuditingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,21 +25,38 @@ public class Account extends AuditingEntity{
     private String email;
 
     @NotEmpty
+    @Column(name="account_name")
     private String name;
 
+    @NotEmpty
+    private String password;
 
-    @Builder
-    public Account(Long id, String email, String name) {
-        if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name)){
-            throw new IllegalArgumentException("email과 name은 빈 값이 아니여야 합니다");
+    public Account(Long id, String email, String name, String password) {
+        if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name) || StringUtils.isEmpty(password)){
+            throw new AccountCreateException("email, name, password은 빈 값이 아니여야 합니다");
         }
         //이메일 정규식
         this.id = id;
         this.email = email;
         this.name = name;
     }
+    @Builder
+    public Account(Long id, String email, String name, String password, PasswordEncoder passwordEncoder) {
+        if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name) || StringUtils.isEmpty(password)){
+            throw new AccountCreateException("email, name, password은 빈 값이 아니여야 합니다");
+        }
+        //이메일 정규식
+        this.id = id;
+        this.email = email;
+        this.name = name;
+        this.password = passwordEncoder.encode(password);
+    }
 
     public boolean isSameHost(Account host) {
-        return Objects.equals(host.email, this.email);
+        return host != null && Objects.equals(this.email, host.email);
+    }
+
+    public boolean matchPassword(String password, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(this.password, password);
     }
 }

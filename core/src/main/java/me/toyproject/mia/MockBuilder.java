@@ -4,12 +4,14 @@ import me.toyproject.mia.domain.Account;
 import me.toyproject.mia.domain.Event;
 import me.toyproject.mia.domain.Period;
 import me.toyproject.mia.dto.EventDto;
+import me.toyproject.mia.dto.HostDto;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 
 public class MockBuilder {
-    public static Event constructEvent(Long id, String title) {
+    public static Event constructEvent(Long id, String title, Account account) {
         Period register = new Period(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(15));
         Period open = new Period(LocalDateTime.now().plusDays(20), LocalDateTime.now().plusDays(25));
         return Event.builder()
@@ -21,17 +23,21 @@ public class MockBuilder {
                 .registerOpenPeriod(register)
                 .price(1000)
                 .location("SOMEWHERE")
-                .host(constructAccount("test@ama.ama"))
-
+                .host(account)
                 .build();
     }
     public static Account constructAccount(String email) {
-        return Account.builder().email(email).name("NAME").build();
+        return Account.builder().email(email).name("NAME").password("PASS").passwordEncoder(new BCryptPasswordEncoder()).build();
     }
     public static EventDto createEventDtoFrom(Event originalEvent) {
         EventDto modifyEventDto = new EventDto();
         BeanUtils.copyProperties(originalEvent, modifyEventDto);
         return modifyEventDto;
+    }
+    public static HostDto createHostDtoFrom(Account originalAccount) {
+        HostDto hostDto = new HostDto();
+        BeanUtils.copyProperties(originalAccount, hostDto);
+        return hostDto;
     }
 
 }

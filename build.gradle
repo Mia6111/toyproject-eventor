@@ -32,7 +32,6 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
-
     group 'me.toyproject.mia'
     version '0.0.0'
     sourceCompatibility = 1.8
@@ -57,16 +56,14 @@ subprojects {
     }
 
     dependencies{
-        compileOnly('org.projectlombok:lombok')
+        compile('org.projectlombok:lombok')
         testCompile('org.springframework.boot:spring-boot-starter-test')
     }
-
 }
 
 project(':api') {
     dependencies {
         compile project(':core')
-        compile project(':common')
     }
 }
 
