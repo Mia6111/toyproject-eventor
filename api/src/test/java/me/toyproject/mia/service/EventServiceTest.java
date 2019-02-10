@@ -78,7 +78,7 @@ public class EventServiceTest {
     @Test
     public void 이벤트를_생성한다() {
         when(eventRepository.save(any(Event.class))).thenReturn(e1);
-        EventDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
+        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
 
         log.debug("eventDto {}", createdEvent);
         assertThat(createdEvent.getId()).isNotNull();
@@ -88,7 +88,7 @@ public class EventServiceTest {
     public void 유효하지않은_이벤트를_생성할_경우_익셉션() {
         Event event = Event.builder()
                 .title(null).build();
-        EventDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
+        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
     }
 
     @Test

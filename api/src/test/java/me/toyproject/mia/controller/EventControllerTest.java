@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,6 +23,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.hypermedia.HypermediaDocumentation;
+import org.springframework.restdocs.hypermedia.LinkDescriptor;
+import org.springframework.restdocs.hypermedia.LinksSnippet;
+import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.restdocs.payload.JsonFieldType;
+import org.springframework.restdocs.payload.PayloadDocumentation;
+import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +38,13 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.halLinks;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = ApiApplication.class)
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs(uriScheme = "https", uriHost = "docs.api.com")
 @Import(WebTestConfiguration.class)
 @Slf4j
 @Transactional
@@ -63,8 +78,10 @@ public class EventControllerTest {
 
     @Autowired
     private EventRepository eventRepository;
-//    @Autowired
-//    private AccountRepository accountRepository;
+
+    private FieldDescriptor[] eventResponseFields;
+    private FieldDescriptor[] eventRequestFields;
+    private FieldDescriptor[] hostFields;
 
     @Before
     public void setup() {
@@ -75,20 +92,39 @@ public class EventControllerTest {
         event = mockEntityHelper.mockEvent(account);
 
         when(requestScopedApiAuth.getAccount()).thenReturn(account);
-        log.debug("check api {}", requestScopedApiAuth.getAccount());
-    }
 
-//    @PersistenceContext
-//    private EntityManager entityManager;
-//
-//    @After
-//    public void clean() {
-//        log.debug("clean");
-//        eventRepository.delete(event);
-//        entityManager.flush();
-//        accountRepository.delete(account);
-//
-//    }
+
+        eventRequestFields = new FieldDescriptor[]{
+                fieldWithPath("title").type(JsonFieldType.STRING).description("제목"),
+                fieldWithPath("content").type(JsonFieldType.STRING).description("내용"),
+                fieldWithPath("registerOpenPeriod.startDate").type(JsonFieldType.STRING).description("참가 등록 시작일시"),
+                fieldWithPath("registerOpenPeriod.endDate").type(JsonFieldType.STRING).description("참가 등록 마감일시"),
+                fieldWithPath("eventOpenPriod.startDate").type(JsonFieldType.STRING).description("이벤트 시작일시"),
+                fieldWithPath("eventOpenPriod.endDate").type(JsonFieldType.STRING).description("이벤트 종료일시"),
+                fieldWithPath("price").type(JsonFieldType.NUMBER).description("참석 비용"),
+                fieldWithPath("location").type(JsonFieldType.STRING).description("장소"),
+                fieldWithPath("maxPeopleCnt").type(JsonFieldType.NUMBER).description("참가자 최대 수")
+        };
+
+        eventResponseFields = new FieldDescriptor[]{
+                fieldWithPath("title").type(JsonFieldType.STRING).description("제목"),
+                fieldWithPath("content").type(JsonFieldType.STRING).description("내용"),
+                fieldWithPath("registerOpenPeriod.startDate").type(JsonFieldType.STRING).description("참가 등록 시작일시"),
+                fieldWithPath("registerOpenPeriod.endDate").type(JsonFieldType.STRING).description("참가 등록 마감일시"),
+                fieldWithPath("eventOpenPriod.startDate").type(JsonFieldType.STRING).description("이벤트 시작일시"),
+                fieldWithPath("eventOpenPriod.endDate").type(JsonFieldType.STRING).description("이벤트 종료일시"),
+                fieldWithPath("price").type(JsonFieldType.NUMBER).description("참석 비용"),
+                fieldWithPath("location").type(JsonFieldType.STRING).description("장소"),
+                fieldWithPath("maxPeopleCnt").type(JsonFieldType.NUMBER).description("참가자 최대 수"),
+                fieldWithPath("enrolledPeopleCnt").type(JsonFieldType.NUMBER).description("참가 등록자 수"),
+                fieldWithPath("registerOpen").type(JsonFieldType.BOOLEAN).description("참가 등록 가능 여부")
+        };
+        hostFields = new FieldDescriptor[]{
+                fieldWithPath("email").type(JsonFieldType.STRING).description("호스트 이메일"),
+                fieldWithPath("name").type(JsonFieldType.STRING).description("호스트 명")
+        };
+
+    }
 
     @Test
     public void findAllRegisterOpenEvents() throws Exception {
@@ -101,6 +137,33 @@ public class EventControllerTest {
                 .andExpect(jsonPath("_embedded.eventDtoList").isArray())
                 .andExpect(jsonPath("_embedded.eventDtoList[0]._links.self").exists())
                 .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create").exists())
+                .andExpect(jsonPath("page").exists())
+                .andDo(document("get-register-open-events",
+                        links(linkWithRel("create").description("create").optional()).and(pagingLinks),
+                        responseFields(
+                                fieldWithPath("_embedded").type(JsonFieldType.OBJECT).description("embedded"),
+                                fieldWithPath("_embedded.eventDtoList[]").type(JsonFieldType.ARRAY).description("등록기간 중인 이벤트 목록"))
+                                .andWithPrefix("_embedded.eventDtoList[].", eventResponseFields)
+                                .and(subsectionWithPath("_embedded.eventDtoList[]._links").ignored())
+                                .and(pageFields)
+                ))
+        ;
+    }
+
+    @Test
+    public void findAllRegisterOpenEvents_로그인안한경우() throws Exception {
+        when(requestScopedApiAuth.getAccount()).thenReturn(null);
+        mockMvc.perform(get(EVENT_RESOURCE))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
+                .andExpect(jsonPath("_embedded").exists())
+                .andExpect(jsonPath("_embedded.eventDtoList").isArray())
+                .andExpect(jsonPath("_embedded.eventDtoList").isArray())
+                .andExpect(jsonPath("_embedded.eventDtoList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create").doesNotExist())
                 .andExpect(jsonPath("page").exists());
     }
 
@@ -132,12 +195,33 @@ public class EventControllerTest {
                 .andExpect(jsonPath("eventOpenPriod").exists())
                 .andExpect(jsonPath("content").value(eventDto.getContent()))
                 .andExpect(jsonPath("title").value(eventDto.getTitle()))
-
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.events").exists())
                 .andExpect(jsonPath("_links.profile").exists())
                 .andExpect(jsonPath("_links.update").exists())
-                .andExpect(jsonPath("_links.delete").exists());
+                .andExpect(jsonPath("_links.delete").exists())
+                .andDo(document("create-event",
+                        links(
+                                linkWithRel("events").description("events"),
+                                linkWithRel("host").description("host"),
+                                linkWithRel("update").description("update").optional(),
+                                linkWithRel("delete").description("delete").optional()
+                        ),
+                        relaxedRequestFields(
+                                fieldWithPath("title").type(JsonFieldType.STRING).description("제목"),
+                                fieldWithPath("content").type(JsonFieldType.STRING).description("내용"),
+                                fieldWithPath("registerOpenPeriod.startDate").type(JsonFieldType.STRING).description("참가 등록 시작일시"),
+                                fieldWithPath("registerOpenPeriod.endDate").type(JsonFieldType.STRING).description("참가 등록 마감일시"),
+                                fieldWithPath("eventOpenPriod.startDate").type(JsonFieldType.STRING).description("이벤트 시작일시"),
+                                fieldWithPath("eventOpenPriod.endDate").type(JsonFieldType.STRING).description("이벤트 종료일시"),
+                                fieldWithPath("price").type(JsonFieldType.NUMBER).description("참석 비용"),
+                                fieldWithPath("location").type(JsonFieldType.STRING).description("장소"),
+                                fieldWithPath("maxPeopleCnt").type(JsonFieldType.NUMBER).description("참가자 최대 수"),
+                                fieldWithPath("page").type(JsonFieldType.NUMBER).description("페이지 number").optional()
+                        ),
+                        responseFields(eventResponseFields).andWithPrefix("hostDto.", hostFields))
+                );
+        ;
 
     }
 
@@ -160,13 +244,22 @@ public class EventControllerTest {
                 .andExpect(jsonPath("content").value(event.getContent()))
                 .andExpect(jsonPath("title").value(event.getTitle()))
                 .andExpect(jsonPath("registerOpen").value(event.isRegisterOpen()))
-
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.events").exists())
                 .andExpect(jsonPath("_links.host").exists())
                 .andExpect(jsonPath("_links.profile").exists())
                 .andExpect(jsonPath("_links.update").exists())
-                .andExpect(jsonPath("_links.delete").exists());
+                .andExpect(jsonPath("_links.delete").exists())
+                .andDo(document("get-event",
+                        links(
+                                linkWithRel("events").description("events"),
+                                linkWithRel("host").description("host"),
+                                linkWithRel("update").description("update").optional(),
+                                linkWithRel("delete").description("delete").optional()
+                        ),
+                        pathParameters(parameterWithName("id").description("이벤트 id")),
+                        responseFields(eventResponseFields).andWithPrefix("hostDto.", hostFields))
+                );
 
     }
 
@@ -189,11 +282,12 @@ public class EventControllerTest {
                 .andExpect(jsonPath("content").value(event.getContent()))
                 .andExpect(jsonPath("title").value(event.getTitle()))
                 .andExpect(jsonPath("registerOpen").value(event.isRegisterOpen()))
-
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.events").exists())
                 .andExpect(jsonPath("_links.host").exists())
                 .andExpect(jsonPath("_links.profile").exists());
+        ;
+
 
     }
 
@@ -226,18 +320,28 @@ public class EventControllerTest {
                 .andExpect(jsonPath("hostDto.email").value(account.getEmail()))
                 .andExpect(jsonPath("hostDto.name").value(account.getName()))
                 .andExpect(jsonPath("enrolledPeopleCnt").exists())
-                .andExpect(jsonPath("maxPeopleCnt").value(eventRequest.getMaxPeopleCnt()))
-                .andExpect(jsonPath("location").value(eventRequest.getLocation()))
-                .andExpect(jsonPath("price").value(eventRequest.getPrice()))
+                .andExpect(jsonPath("maxPeopleCnt").value(event.getMaxPeopleCnt()))
+                .andExpect(jsonPath("location").value(event.getLocation()))
+                .andExpect(jsonPath("price").value(event.getPrice()))
                 .andExpect(jsonPath("registerOpenPeriod").exists())
                 .andExpect(jsonPath("eventOpenPriod").exists())
-                .andExpect(jsonPath("content").value(eventRequest.getContent()))
-                .andExpect(jsonPath("title").value(eventRequest.getTitle()))
-                .andExpect(jsonPath("registerOpen").value(true))
+                .andExpect(jsonPath("content").value(event.getContent()))
+                .andExpect(jsonPath("title").value(event.getTitle()))
+                .andExpect(jsonPath("registerOpen").value(event.isRegisterOpen()))
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.events").exists())
                 .andExpect(jsonPath("_links.host").exists())
-                .andExpect(jsonPath("_links.profile").exists());
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("modify-event",
+                        links(
+                                linkWithRel("events").description("events"),
+                                linkWithRel("host").description("host"),
+                                linkWithRel("delete").description("delete")
+                        ),
+                        pathParameters(parameterWithName("id").description("id")),
+                        relaxedRequestFields(eventRequestFields),// response 에선 사용되나 request에선 사용되지 않는 필드들
+                        responseFields(eventResponseFields).andWithPrefix("hostDto.", hostFields)
+                ));
 
     }
 
@@ -304,10 +408,16 @@ public class EventControllerTest {
                 .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword())))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("content").value(event.getId()))
+                .andExpect(jsonPath("content").value(event.getId())) //?
                 .andExpect(jsonPath("_links.events").exists())
-                .andExpect(jsonPath("_links.profile").exists());
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("delete-event",
+                        pathParameters(parameterWithName("id").description("id")),
+                        links(
+                                linkWithRel("events").description("events")
+                        )));
     }
+
     @Test
     public void deleteEvent_호스트아닐때() throws Exception {
         when(requestScopedApiAuth.getAccount()).thenReturn(null);
@@ -323,4 +433,29 @@ public class EventControllerTest {
 
     }
 
+    private static LinksSnippet links(LinkDescriptor... descriptors) {
+        return HypermediaDocumentation.links(halLinks(),
+                linkWithRel("self").ignored().optional(),
+                linkWithRel("profile").ignored().optional(),
+                linkWithRel("curies").ignored().optional()
+        ).and(descriptors);
+    }
+
+    private static ResponseFieldsSnippet responseFields(FieldDescriptor... descriptors) {
+        return PayloadDocumentation.responseFields(subsectionWithPath("_links").ignored()).and(descriptors);
+
+    }
+
+    private final LinkDescriptor[] pagingLinks = new LinkDescriptor[]{
+            linkWithRel("first").optional().description("The first page of results"),
+            linkWithRel("last").optional().description("The last page of results"),
+            linkWithRel("next").optional().description("The next page of results"),
+            linkWithRel("prev").optional().description("The previous page of results")};
+
+    private final FieldDescriptor[] pageFields = new FieldDescriptor[]{
+            fieldWithPath("page.size").type(JsonFieldType.NUMBER).description("페이지 사이즈"),
+            fieldWithPath("page.totalElements").type(JsonFieldType.NUMBER).description("총 갯수"),
+            fieldWithPath("page.totalPages").type(JsonFieldType.NUMBER).description("총 페이지 수"),
+            fieldWithPath("page.number").type(JsonFieldType.NUMBER).description("페이지 넘버")
+    };
 }

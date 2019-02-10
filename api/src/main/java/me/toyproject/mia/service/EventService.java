@@ -55,10 +55,10 @@ public class EventService {
     }
 
     @Transactional
-    public EventDto create(EventDto eventDto) {
+    public EventDetailDto create(EventDto eventDto) {
         final Account account = apiAuth.getAccount();
         Event createdEvent = eventRepository.save(eventDto.toDomain(account));
-        return createEventDto(createdEvent);
+        return createEventDetailDto(createdEvent);
     }
 
     @Transactional

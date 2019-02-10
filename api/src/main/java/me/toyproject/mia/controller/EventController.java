@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Objects;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -41,18 +42,26 @@ public class EventController {
         PagedResources<Resource<EventDto>> resources = assembler.toResource(eventDtos,
                 event -> new Resource<>(event, linkTo(EventController.class).slash(event.getId()).withSelfRel()),
                 linkTo(EventController.class).withSelfRel());
+        if (Objects.nonNull(apiAuth.getAccount())) {
+         resources.add(linkTo(EventController.class).withRel("create"));
+        }
+
+        resources.add(
+                linkTo(EventController.class).withSelfRel(),
+                new Link("http://localhost:8080/docs/index.html#get-register-open-events").withRel("profile"));
+
         return ResponseEntity.ok(resources);
     }
 
     @PostMapping("")
-    public ResponseEntity<Resource<EventDto>> createEvent(@RequestBody EventDto eventDto) {
-        EventDto createdEventDto = eventService.create(eventDto);
-        Resource<EventDto> resource = getEventResponseResource(createdEventDto);
+    public ResponseEntity<Resource<EventDetailDto>> createEvent(@RequestBody EventDto eventDto) {
+        EventDetailDto createdEventDto = eventService.create(eventDto);
+        Resource<EventDetailDto> resource = getEventResponseResource(createdEventDto);
 
         resource.add(
                 linkTo(EventController.class).slash(createdEventDto.getId()).withRel("update"),
                 linkTo(EventController.class).slash(createdEventDto.getId()).withRel("delete"),
-                new Link("http://localhost:8080/docs/index.html#resources-events-read").withRel("profile"));
+                new Link("http://localhost:8080/docs/index.html#create-event").withRel("profile"));
         final URI selfLinkUri = ControllerLinkBuilder.linkTo(EventController.class).slash(eventDto.getId()).toUri();
 
         return ResponseEntity.created(selfLinkUri).body(resource);
@@ -69,7 +78,7 @@ public class EventController {
                     linkTo(EventController.class).slash(detailDto.getId()).withRel("delete"));
         }
 
-        resource.add(new Link("http://localhost:8080/docs/index.html#resources-events-read").withRel("profile"));
+        resource.add(new Link("http://localhost:8080/docs/index.html#get-event").withRel("profile"));
         return ResponseEntity.ok(resource);
     }
 
@@ -78,8 +87,13 @@ public class EventController {
         EventDetailDto event = eventService.modifyEvent(id, eventDto);
 
         Resource<EventDetailDto> resource = getEventResponseResource(event);
-        resource.add(new Link("http://localhost:8080/docs/index.html#resources-events-read").withRel("profile"));
 
+        resource.add(
+                linkTo(EventController.class).slash(event.getId()).withRel("delete"),
+                linkTo(methodOn(HostController.class).findById(event.getHostDto().getId())).withRel("host")
+        );
+
+        resource.add(new Link("http://localhost:8080/docs/index.html#modify-event").withRel("profile"));
         return ResponseEntity.ok(resource);
     }
 
@@ -87,7 +101,7 @@ public class EventController {
     public ResponseEntity<Resource<Long>> deleteEvent(@PathVariable("id") Long id) {
         EventDto event = eventService.deleteEvent(id);
         Resource<Long> resource = new Resource<>(event.getId());
-        resource.add(new Link("http://localhost:8080/docs/index.html#resources-events-delete").withRel("profile"));
+        resource.add(new Link("http://localhost:8080/docs/index.html#delete-event").withRel("profile"));
         resource.add(linkTo(EventController.class).withRel("events"));
         return ResponseEntity.ok(resource);
     }

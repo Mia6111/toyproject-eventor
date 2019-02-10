@@ -1,13 +1,44 @@
+plugins {
+    id 'java'
+    id "org.asciidoctor.convert" version "1.5.3"
+}
+
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    compile project(':core')
+    compile('org.modelmapper:modelmapper:2.3.2')
+    implementation('org.springframework.boot:spring-boot-starter-hateoas')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    testImplementation('org.springframework.restdocs:spring-restdocs-mockmvc')
+    asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE'
+}
 
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
 
-//    compile project(':common')
-    compile('org.springframework.boot:spring-boot-starter-web')
-    testCompile('org.springframework.boot:spring-boot-starter-test')
-//    comile('org.springframework:spring-hateoas')
-    compile('org.springframework.boot:spring-boot-starter-hateoas')
-//    compile('org.springframework.boot:spring-boot-starter-security')
+test {
+    outputs.dir snippetsDir
+}
+
+bootJar {
+    dependsOn asciidoctor
+    from("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
+}
+
+build {
+    dependsOn bootJar
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    dependsOn test
 }
