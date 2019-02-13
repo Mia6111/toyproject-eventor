@@ -1,7 +1,7 @@
 package me.toyproject.mia.configuration;
 
 import lombok.AllArgsConstructor;
-import me.toyproject.mia.domain.Account;
+import me.toyproject.mia.account.Account;
 import me.toyproject.mia.service.AccountService;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.tomcat.util.codec.binary.Base64;

@@ -1,6 +1,6 @@
 package me.toyproject.mia.configuration;
 
-import me.toyproject.mia.domain.Account;
+import me.toyproject.mia.account.Account;
 
 import javax.servlet.http.HttpSession;
 

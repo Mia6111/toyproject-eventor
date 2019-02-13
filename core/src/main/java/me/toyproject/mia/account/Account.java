@@ -1,8 +1,9 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.account;
 
 import javax.persistence.Column;
 import lombok.*;
-import me.toyproject.mia.exception.AccountCreateException;
+import me.toyproject.mia.exception.AccountException;
+import me.toyproject.mia.persistence.AuditingEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 
@@ -33,7 +34,7 @@ public class Account extends AuditingEntity {
 
     public Account(Long id, String email, String name, String password) {
         if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name) || StringUtils.isEmpty(password)){
-            throw new AccountCreateException("email, name, password은 빈 값이 아니여야 합니다");
+            throw new AccountException("email, name, password은 빈 값이 아니여야 합니다");
         }
         //이메일 정규식
         this.id = id;
@@ -43,7 +44,7 @@ public class Account extends AuditingEntity {
     @Builder
     public Account(Long id, String email, String name, String password, PasswordEncoder passwordEncoder) {
         if(StringUtils.isEmpty(email) || StringUtils.isEmpty(name) || StringUtils.isEmpty(password)){
-            throw new AccountCreateException("email, name, password은 빈 값이 아니여야 합니다");
+            throw new AccountException("email, name, password은 빈 값이 아니여야 합니다");
         }
         //이메일 정규식
         this.id = id;

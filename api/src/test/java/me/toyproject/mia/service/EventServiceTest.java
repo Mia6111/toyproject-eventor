@@ -5,17 +5,17 @@ import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import me.toyproject.mia.ApiApplication;
-import me.toyproject.mia.MockBuilder;
-import me.toyproject.mia.domain.Account;
-import me.toyproject.mia.domain.Event;
-import me.toyproject.mia.domain.EventRepository;
-import me.toyproject.mia.domain.Period;
-import me.toyproject.mia.dto.EventDetailDto;
-import me.toyproject.mia.dto.EventDto;
-import me.toyproject.mia.dto.HostDto;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.EventRepository;
+import me.toyproject.mia.event.Period;
+import me.toyproject.mia.event.EventDetailDto;
+import me.toyproject.mia.event.EventDto;
+import me.toyproject.mia.account.HostDto;
 import me.toyproject.mia.exception.DataNotFoundException;
 import me.toyproject.mia.exception.EventException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
+import me.toyproject.mia.mock.MockBuilder;
 import me.toyproject.mia.persistence.ApiAuth;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -28,7 +28,6 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -125,11 +124,7 @@ public class EventServiceTest {
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
 
-        HostDto hostDto = new HostDto();
-        hostDto.setEmail(e1.getHost().getEmail());
-
-        EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), detailDto);
+        EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), modifyDto);
 
         assertThat(eventDetailDto.getId()).isEqualTo(e1.getId());
         assertThat(eventDetailDto.getTitle()).isEqualTo(modifyDto.getTitle());

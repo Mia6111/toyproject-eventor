@@ -1,10 +1,10 @@
-package me.toyproject.mia;
+package me.toyproject.mia.mock;
 
-import me.toyproject.mia.domain.Account;
-import me.toyproject.mia.domain.Event;
-import me.toyproject.mia.domain.Period;
-import me.toyproject.mia.dto.EventDto;
-import me.toyproject.mia.dto.HostDto;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.Period;
+import me.toyproject.mia.event.EventDto;
+import me.toyproject.mia.account.HostDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 

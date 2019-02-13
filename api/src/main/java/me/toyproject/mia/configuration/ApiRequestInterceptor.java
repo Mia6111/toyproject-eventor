@@ -1,7 +1,7 @@
 package me.toyproject.mia.configuration;
 
 import lombok.AllArgsConstructor;
-import me.toyproject.mia.domain.Account;
+import me.toyproject.mia.account.Account;
 import me.toyproject.mia.persistence.ApiAuth;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

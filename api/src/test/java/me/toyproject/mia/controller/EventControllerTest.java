@@ -3,12 +3,16 @@ package me.toyproject.mia.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import me.toyproject.mia.ApiApplication;
-import me.toyproject.mia.MockEntityHelper;
-import me.toyproject.mia.domain.*;
-import me.toyproject.mia.dto.EventDetailDto;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.event.EventDetailDto;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.EventRepository;
+import me.toyproject.mia.event.Period;
+import me.toyproject.mia.mock.MockEntityHelper;
 import me.toyproject.mia.persistence.ApiAuth;
 import me.toyproject.mia.configuration.WebTestConfiguration;
-import me.toyproject.mia.dto.EventDto;
+import me.toyproject.mia.event.EventDto;
+import org.apache.logging.log4j.util.Strings;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
@@ -424,6 +428,30 @@ public class EventControllerTest {
         mockMvc.perform(delete(EVENT_RESOURCE + "/{id}", event.getId()))
                 .andDo(print())
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void createEvent_EventDto_Validation실패() throws Exception {
+        EventDto eventDto = new EventDto();
+        eventDto.setTitle(Strings.EMPTY);
+        eventDto.setContent(Strings.EMPTY);
+        eventDto.setMaxPeopleCnt(Integer.MAX_VALUE - 100);
+        eventDto.setLocation(Strings.EMPTY);
+        eventDto.setPrice(Integer.MAX_VALUE - 100);
+        eventDto.setEventOpenPriod(new Period(LocalDateTime.now().plusDays(35), LocalDateTime.now().plusDays(37)));
+        eventDto.setRegisterOpenPeriod(new Period(LocalDateTime.now().plusDays(35), LocalDateTime.now().plusDays(40)));
+
+        mockMvc.perform(post(EVENT_RESOURCE)
+                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(eventDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errors").isArray())
+                .andExpect(jsonPath("errors[0].objectName").exists())
+                .andExpect(jsonPath("errors[0].field").exists())
+                .andExpect(jsonPath("errors[0].message").exists())
+        ;
     }
 
     String createHeaders(String email, String password) {

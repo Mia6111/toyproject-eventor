@@ -1,4 +1,4 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.Objects;
@@ -38,10 +38,6 @@ public class Period {
 
     boolean isBeforeOtherPeriodEnd(Period otherPeriod) {
         return this.endDate.isBefore(otherPeriod.endDate);
-    }
-
-    public Duration diffDuration(Period latter) {
-        return Duration.between(this.endDate.toInstant(ZoneOffset.UTC), latter.startDate.toInstant(ZoneOffset.UTC));
     }
 
     @Override

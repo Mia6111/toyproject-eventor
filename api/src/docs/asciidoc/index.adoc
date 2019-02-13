@@ -1,0 +1,71 @@
+= Events REST API
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectlinks:
+
+
+[[common]]
+== 공통 사항
+
+API에 관계없이 아래 사항을 지켜주셔야 합니다.
+
+=== Domain
+
+|===
+| 환경 | domain
+
+| 개발서버
+|
+
+|===
+
+
+=== Header
+
+|===
+| name | 설명
+
+| `Authorization`
+| API를 사용하기 위한 인증 키
+|===
+
+=== 공통 Response Body
+
+|===
+| field | 설명
+
+| `_links`
+| HATOEAS 링크 (HAL)
+| `_links.self`
+| self link
+| `_links.profile`
+| profile link
+|===
+
+[[resources]]
+= 리소스
+
+[[resources-events]]
+== 이벤트
+[[get-event]]
+== 이벤트 조회
+operation::get-event[]
+
+[[get-register-open-events]]
+== 등록 기간 중인 이벤트 전체 조회
+operation::get-register-open-events[]
+
+[[create-event]]
+== 이벤트 생성
+operation::create-event[]
+
+[[modify-event]]
+== 이벤트 생성
+operation::modify-event[]
+
+[[delete-event]]
+== 이벤트 생성
+operation::delete-eventt[]

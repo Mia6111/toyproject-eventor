@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.toyproject.mia.persistence.ApiAuth;
 import me.toyproject.mia.service.EventService;
-import me.toyproject.mia.dto.EventDetailDto;
-import me.toyproject.mia.dto.EventDto;
+import me.toyproject.mia.event.EventDetailDto;
+import me.toyproject.mia.event.EventDto;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +18,7 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.net.URI;
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ public class EventController {
     }
 
     @PostMapping("")
-    public ResponseEntity<Resource<EventDetailDto>> createEvent(@RequestBody EventDto eventDto) {
+    public ResponseEntity<Resource<EventDetailDto>> createEvent(@RequestBody @Valid EventDto eventDto) {
         EventDetailDto createdEventDto = eventService.create(eventDto);
         Resource<EventDetailDto> resource = getEventResponseResource(createdEventDto);
 
@@ -83,7 +84,7 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Resource<EventDetailDto>> modifyEvent(@PathVariable("id") Long id, @RequestBody EventDetailDto eventDto) {
+    public ResponseEntity<Resource<EventDetailDto>> modifyEvent(@PathVariable("id") Long id, @RequestBody @Valid EventDto eventDto) {
         EventDetailDto event = eventService.modifyEvent(id, eventDto);
 
         Resource<EventDetailDto> resource = getEventResponseResource(event);

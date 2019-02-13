@@ -1,5 +1,6 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.event;
 
+import me.toyproject.mia.event.Event;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

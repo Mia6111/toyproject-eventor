@@ -1,16 +1,16 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.event;
 
 import lombok.*;
+import me.toyproject.mia.account.Account;
 import me.toyproject.mia.exception.EventException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
+import me.toyproject.mia.persistence.AuditingEntity;
 import org.apache.commons.lang3.ObjectUtils;
 import org.hibernate.annotations.Where;
 import org.springframework.util.Assert;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;

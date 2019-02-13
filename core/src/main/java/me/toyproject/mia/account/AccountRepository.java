@@ -1,5 +1,6 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.account;
 
+import me.toyproject.mia.account.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,9 +1,11 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.event;
 
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.Period;
 import me.toyproject.mia.exception.EventException;
 import org.junit.Test;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;

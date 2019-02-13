@@ -1,4 +1,4 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.configuration;
 
 
 import java.lang.annotation.ElementType;

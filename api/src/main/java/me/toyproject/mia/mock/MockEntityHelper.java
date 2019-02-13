@@ -1,9 +1,12 @@
-package me.toyproject.mia;
+package me.toyproject.mia.mock;
 
 import lombok.AllArgsConstructor;
-import me.toyproject.mia.domain.*;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.AccountRepository;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.EventRepository;
+import me.toyproject.mia.event.Period;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

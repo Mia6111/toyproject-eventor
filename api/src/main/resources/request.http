@@ -54,3 +54,27 @@ Content-Type: application/json
 }
 
 ###
+
+
+
+POST localhost:8080/api/v1/events
+Cookie: JSESSIONID={{JSESSIONID}}
+Content-Type: application/json
+
+{
+  "content": "c1",
+  "registerOpenPeriod": {
+    "startDate": "2019-02-01 00:00:00",
+    "endDate": "2019-02-27 00:00:00"
+  },
+  "eventOpenPriod": {
+    "startDate": "2019-02-25 00:00:00",
+    "endDate": "2019-02-26 00:00:00"
+  },
+  "maxPeopleCnt" : 99,
+  "price": 10000,
+  "location" : "어딘가"
+
+}
+
+###

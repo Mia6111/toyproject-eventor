@@ -2,7 +2,7 @@ package me.toyproject.mia.controller;
 
 import lombok.AllArgsConstructor;
 import me.toyproject.mia.configuration.SessionUtils;
-import me.toyproject.mia.domain.Account;
+import me.toyproject.mia.account.Account;
 import me.toyproject.mia.service.AccountService;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;

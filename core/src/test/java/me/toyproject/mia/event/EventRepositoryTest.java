@@ -1,10 +1,13 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.event;
 
 import me.toyproject.mia.CoreApplicatoin;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.AccountRepository;
+import me.toyproject.mia.event.Event;
+import me.toyproject.mia.event.EventRepository;
+import me.toyproject.mia.event.Period;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;

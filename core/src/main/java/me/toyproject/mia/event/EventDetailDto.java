@@ -1,22 +1,20 @@
-package me.toyproject.mia.dto;
+package me.toyproject.mia.event;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import me.toyproject.mia.domain.Account;
-import me.toyproject.mia.domain.Event;
-import me.toyproject.mia.domain.Period;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.HostDto;
 
 import java.time.LocalDateTime;
-@Slf4j
-@Getter @Setter
-@ToString
+
+@NoArgsConstructor
+@Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class EventDto {
+public class EventDetailDto {
     @JsonIgnore
     private Long id;
     private String title;
@@ -28,11 +26,27 @@ public class EventDto {
     private int price;
     private String location;
 
+    private HostDto hostDto;
+
+    public EventDetailDto(Long eventId, EventDto eventDto, HostDto hostDto) {
+        this.id = eventId;
+        this.hostDto = hostDto;
+        this.title = eventDto.getTitle();
+        this.content = eventDto.getContent();
+        this.registerOpenPeriod = eventDto.getRegisterOpenPeriod();
+        this.eventOpenPriod = eventDto.getEventOpenPriod();
+        this.maxPeopleCnt = eventDto.getMaxPeopleCnt();
+        this.enrolledPeopleCnt = eventDto.getEnrolledPeopleCnt();
+        this.price = eventDto.getPrice();
+        this.location = eventDto.getLocation();
+    }
+
+
     public boolean isRegisterOpen() {
         return registerOpenPeriod.isOngoing(LocalDateTime.now());
     }
 
-    public Event toDomain(Account account){
+    public Event toDomain(Account host) {
         return Event.builder()
                 .id(this.id)
                 .title(this.title)
@@ -42,7 +56,7 @@ public class EventDto {
                 .registerOpenPeriod(this.registerOpenPeriod)
                 .price(this.price)
                 .location(this.location)
-                .host(account)
+                .host(host)
                 .build();
     }
 }

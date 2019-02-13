@@ -1,9 +1,7 @@
-package me.toyproject.mia.dto;
+package me.toyproject.mia.account;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import me.toyproject.mia.domain.Account;
-import org.springframework.stereotype.Service;
 
 @Getter @Setter @NoArgsConstructor
 public class HostDto {

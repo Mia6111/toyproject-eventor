@@ -1,9 +1,8 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
-import me.toyproject.mia.CoreApplicatoin;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

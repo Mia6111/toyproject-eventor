@@ -1,4 +1,4 @@
-package me.toyproject.mia.domain;
+package me.toyproject.mia.persistence;
 
 import lombok.Getter;
 import lombok.Setter;

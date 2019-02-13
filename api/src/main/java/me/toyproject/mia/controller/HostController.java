@@ -1,9 +1,8 @@
 package me.toyproject.mia.controller;
 
 import lombok.AllArgsConstructor;
-import me.toyproject.mia.dto.HostDto;
+import me.toyproject.mia.account.HostDto;
 import me.toyproject.mia.service.AccountService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
