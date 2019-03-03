@@ -1,5 +1,4 @@
-package me.toyproject.mia.configuration;
-
+package me.toyproject.mia.account;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

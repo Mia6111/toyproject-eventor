@@ -3,6 +3,7 @@ package me.toyproject.mia.event;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.Objects;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -17,11 +18,11 @@ import java.time.ZoneOffset;
 public class Period {
 
     @Column(name="start_date")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", locale = "ko")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startDate;
 
     @Column(name="end_date")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", locale = "ko")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endDate;
 
     public Period(LocalDateTime startDate, LocalDateTime endDate) {

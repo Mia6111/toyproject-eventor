@@ -62,7 +62,7 @@ public class EventDto {
     }
     @AssertTrue
     private boolean isOpenEndBeforeRegisterEnd(){
-        return ! eventOpenPriod.isBeforeOtherPeriodEnd(registerOpenPeriod);
+        return !eventOpenPriod.isBeforeOtherPeriodEnd(registerOpenPeriod);
     }
     @AssertTrue
     private boolean isOpenStartInOneMonth(){

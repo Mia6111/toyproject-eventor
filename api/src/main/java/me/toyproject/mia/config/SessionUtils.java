@@ -1,4 +1,4 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import me.toyproject.mia.account.Account;
 

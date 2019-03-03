@@ -1,4 +1,4 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import lombok.AllArgsConstructor;
 import me.toyproject.mia.account.Account;

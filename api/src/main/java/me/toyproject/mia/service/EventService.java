@@ -16,6 +16,7 @@ import me.toyproject.mia.exception.DataNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +32,6 @@ public class EventService {
     private EventRepository eventRepository;
     private AccountRepository accountRepository;
     private MapperFacade orikaMapperFacade;
-
-    @Resource(name=ApiAuth.REQUEST_SCOPE_BEAN_KEY)
-    private ApiAuth apiAuth;
-
 
     public List<EventDto> findAllEvents() {
         List<Event> events = eventRepository.findAllRegisterOpenNow(LocalDateTime.now());
@@ -54,23 +51,22 @@ public class EventService {
     }
 
     @Transactional
-    public EventDetailDto create(EventDto eventDto) {
-        final Account account = apiAuth.getAccount();
+    public EventDetailDto create(EventDto eventDto, Account account) {
         Event createdEvent = eventRepository.save(eventDto.toDomain(account));
         return createEventDetailDto(createdEvent);
     }
 
     @Transactional
-    public EventDetailDto modifyEvent(Long id, EventDto modifyEventDto) {
+    public EventDetailDto modifyEvent(Long id, EventDto modifyEventDto, Account account) {
         Event event = findEventById(id);
-        event.update(modifyEventDto.toDomain(apiAuth.getAccount()));
+        event.update(modifyEventDto.toDomain(account));
         return createEventDetailDto(event);
     }
 
     @Transactional
-    public EventDto deleteEvent(Long id) {
+    public EventDto deleteEvent(Long id, Account account) {
         Event event = findEventById(id);
-        event.delete(apiAuth.getAccount());
+        event.delete(account);
         return createEventDto(event);
     }
 

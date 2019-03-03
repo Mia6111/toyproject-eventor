@@ -1,4 +1,4 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import javax.sql.DataSource;
 import org.h2.tools.Server;

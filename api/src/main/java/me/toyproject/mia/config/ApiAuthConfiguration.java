@@ -1,4 +1,4 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import lombok.AllArgsConstructor;
 import me.toyproject.mia.persistence.ApiAuth;
@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @AllArgsConstructor
+@Deprecated
 public class ApiAuthConfiguration implements WebMvcConfigurer {
 
     private ApiRequestInterceptor apiRequestInterceptor;
@@ -24,6 +25,6 @@ public class ApiAuthConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(apiRequestInterceptor).excludePathPatterns("/api/v1/accounts/login");
+//        registry.addInterceptor(apiRequestInterceptor).excludePathPatterns("/api/v1/accounts/login");
     }
 }

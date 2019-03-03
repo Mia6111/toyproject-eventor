@@ -2,30 +2,24 @@ package me.toyproject.mia.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import me.toyproject.mia.ApiApplication;
 import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.AccountDetails;
+import me.toyproject.mia.account.AccountRepository;
+import me.toyproject.mia.common.AbstractApiBaseIntegrationTest;
+import me.toyproject.mia.common.AccountInitializingBean;
 import me.toyproject.mia.event.EventDetailDto;
 import me.toyproject.mia.event.Event;
 import me.toyproject.mia.event.EventRepository;
 import me.toyproject.mia.event.Period;
 import me.toyproject.mia.mock.MockEntityHelper;
-import me.toyproject.mia.persistence.ApiAuth;
-import me.toyproject.mia.configuration.WebTestConfiguration;
 import me.toyproject.mia.event.EventDto;
 import org.apache.logging.log4j.util.Strings;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.hypermedia.HypermediaDocumentation;
 import org.springframework.restdocs.hypermedia.LinkDescriptor;
@@ -34,14 +28,14 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.restdocs.payload.PayloadDocumentation;
 import org.springframework.restdocs.payload.ResponseFieldsSnippet;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 
-import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.halLinks;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
@@ -49,24 +43,20 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = ApiApplication.class)
-@AutoConfigureMockMvc
-@AutoConfigureRestDocs(uriScheme = "https", uriHost = "docs.api.com")
-@Import(WebTestConfiguration.class)
 @Slf4j
-@Transactional
-public class EventControllerTest {
+public class EventControllerTest extends AbstractApiBaseIntegrationTest {
     private static final String EVENT_RESOURCE = "/api/v1/events";
 
     @Autowired
     private MockMvc mockMvc;
-
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -74,14 +64,14 @@ public class EventControllerTest {
     @Autowired
     private MockEntityHelper mockEntityHelper;
 
-    @MockBean
-    private ApiAuth requestScopedApiAuth;
-
     private Event event;
     private static Account account;
 
     @Autowired
     private EventRepository eventRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     private FieldDescriptor[] eventResponseFields;
     private FieldDescriptor[] eventRequestFields;
@@ -89,14 +79,10 @@ public class EventControllerTest {
 
     @Before
     public void setup() {
-        log.debug("setup");
 
+        account = accountRepository.findByEmail(AccountInitializingBean.USER_EMAIL).get();
 
-        account = mockEntityHelper.mockAccount();
         event = mockEntityHelper.mockEvent(account);
-
-        when(requestScopedApiAuth.getAccount()).thenReturn(account);
-
 
         eventRequestFields = new FieldDescriptor[]{
                 fieldWithPath("title").type(JsonFieldType.STRING).description("제목"),
@@ -132,6 +118,7 @@ public class EventControllerTest {
 
     @Test
     public void findAllRegisterOpenEvents() throws Exception {
+
         mockMvc.perform(get(EVENT_RESOURCE))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -155,10 +142,14 @@ public class EventControllerTest {
         ;
     }
 
+
     @Test
     public void findAllRegisterOpenEvents_로그인안한경우() throws Exception {
-        when(requestScopedApiAuth.getAccount()).thenReturn(null);
-        mockMvc.perform(get(EVENT_RESOURCE))
+        account = accountRepository.save(account);
+        event = mockEntityHelper.mockEvent(account);
+
+        mockMvc.perform(get(EVENT_RESOURCE)
+                .with(anonymous()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaTypes.HAL_JSON_UTF8_VALUE))
@@ -185,7 +176,7 @@ public class EventControllerTest {
         eventDto.setRegisterOpenPeriod(new Period(LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10)));
 
         mockMvc.perform(post(EVENT_RESOURCE)
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
+//                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
@@ -230,9 +221,28 @@ public class EventControllerTest {
     }
 
     @Test
+    public void createEvent_인증받지않은_사용자() throws Exception {
+        EventDto eventDto = new EventDto();
+        eventDto.setTitle("title");
+        eventDto.setContent("content");
+        eventDto.setMaxPeopleCnt(20);
+        eventDto.setLocation("장소예요");
+        eventDto.setPrice(20000);
+        eventDto.setEventOpenPriod(new Period(LocalDateTime.now().plusDays(15), LocalDateTime.now().plusDays(20)));
+        eventDto.setRegisterOpenPeriod(new Period(LocalDateTime.now().plusDays(5), LocalDateTime.now().plusDays(10)));
+
+        mockMvc.perform(post(EVENT_RESOURCE)
+                .with(anonymous())
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(objectMapper.writeValueAsString(eventDto)))
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(unauthenticated());
+    }
+
+    @Test
     public void findById_호스트일때() throws Exception {
         mockMvc.perform(get(EVENT_RESOURCE + "/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -269,7 +279,6 @@ public class EventControllerTest {
 
     @Test
     public void findById_호스트아닐때() throws Exception {
-        when(requestScopedApiAuth.getAccount()).thenReturn(null);
 
         mockMvc.perform(get(EVENT_RESOURCE + "/{id}", event.getId()))
                 .andDo(print())
@@ -312,10 +321,8 @@ public class EventControllerTest {
         eventRequest.setPrice(5000);
         eventRequest.setMaxPeopleCnt(60);
 
-        when(requestScopedApiAuth.getAccount()).thenReturn(account);
 
         mockMvc.perform(put(EVENT_RESOURCE + "/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
                 .content(objectMapper.writeValueAsString(eventRequest))
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andDo(print())
@@ -350,8 +357,26 @@ public class EventControllerTest {
     }
 
     @Test
+    public void modifyEven_인증오류() throws Exception {
+
+        EventDetailDto eventRequest = new EventDetailDto();
+        BeanUtils.copyProperties(event, eventRequest);
+        eventRequest.setContent("CONTENT - modify");
+        eventRequest.setTitle("TITLE - modify");
+        eventRequest.setLocation("LOCATION - modify");
+        eventRequest.setPrice(5000);
+        eventRequest.setMaxPeopleCnt(60);
+
+        mockMvc.perform(put(EVENT_RESOURCE + "/{id}", event.getId()).with(anonymous())
+                .content(objectMapper.writeValueAsString(eventRequest))
+                .contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isUnauthorized());
+    }
+
+
+    @Test
+    @WithUserDetails(value = AccountInitializingBean.OTHER_USER_EMAIL, userDetailsServiceBeanName = "accountService")
     public void modifyEvent_호스트아닐때() throws Exception {
-        when(requestScopedApiAuth.getAccount()).thenReturn(null);
 
         EventDetailDto eventRequest = new EventDetailDto();
         BeanUtils.copyProperties(event, eventRequest);
@@ -374,7 +399,6 @@ public class EventControllerTest {
         eventRequest.setContent(null);
 
         mockMvc.perform(put(EVENT_RESOURCE + "/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
                 .content(objectMapper.writeValueAsString(eventRequest))
                 .contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isBadRequest());
@@ -408,8 +432,7 @@ public class EventControllerTest {
 
     @Test
     public void deleteEvent() throws Exception {
-        mockMvc.perform(delete(EVENT_RESOURCE + "/{id}", event.getId())
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword())))
+        mockMvc.perform(delete(EVENT_RESOURCE + "/{id}", event.getId()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("content").value(event.getId())) //?
@@ -423,8 +446,16 @@ public class EventControllerTest {
     }
 
     @Test
+    public void deleteEvent_인증오류() throws Exception {
+        mockMvc.perform(delete(EVENT_RESOURCE + "/{id}", event.getId())
+                .with(anonymous()))
+                .andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithUserDetails(value = AccountInitializingBean.OTHER_USER_EMAIL, setupBefore = TestExecutionEvent.TEST_EXECUTION, userDetailsServiceBeanName = "accountService")
     public void deleteEvent_호스트아닐때() throws Exception {
-        when(requestScopedApiAuth.getAccount()).thenReturn(null);
         mockMvc.perform(delete(EVENT_RESOURCE + "/{id}", event.getId()))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -442,7 +473,6 @@ public class EventControllerTest {
         eventDto.setRegisterOpenPeriod(new Period(LocalDateTime.now().plusDays(35), LocalDateTime.now().plusDays(40)));
 
         mockMvc.perform(post(EVENT_RESOURCE)
-                .header(HttpHeaders.AUTHORIZATION, createHeaders(account.getEmail(), account.getPassword()))
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
@@ -452,13 +482,6 @@ public class EventControllerTest {
                 .andExpect(jsonPath("errors[0].field").exists())
                 .andExpect(jsonPath("errors[0].message").exists())
         ;
-    }
-
-    String createHeaders(String email, String password) {
-        String auth = email + ":" + password;
-        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("UTF-8")));
-        return "Basic " + new String(encodedAuth);
-
     }
 
     private static LinksSnippet links(LinkDescriptor... descriptors) {

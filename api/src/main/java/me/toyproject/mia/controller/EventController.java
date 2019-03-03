@@ -2,7 +2,8 @@ package me.toyproject.mia.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.toyproject.mia.persistence.ApiAuth;
+import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.CurrentUser;
 import me.toyproject.mia.service.EventService;
 import me.toyproject.mia.event.EventDetailDto;
 import me.toyproject.mia.event.EventDto;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Objects;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -34,18 +34,16 @@ public class EventController {
 
     private EventService eventService;
 
-    @javax.annotation.Resource(name = "requestScopedApiAuth")
-    private ApiAuth apiAuth;
-
     @GetMapping("")
-    public ResponseEntity<PagedResources<Resource<EventDto>>> findAllRegisterOpenEvents(@RequestParam(value = "page", required = false) Integer page, PagedResourcesAssembler<EventDto> assembler) {
+    public ResponseEntity<PagedResources<Resource<EventDto>>> findAllRegisterOpenEvents(@RequestParam(value = "page", required = false) Integer page, @CurrentUser Account loginUser, PagedResourcesAssembler<EventDto> assembler) {
         Page<EventDto> eventDtos = eventService.findAllEvents(PageRequest.of(ObjectUtils.defaultIfNull(page, 0), DEFAULT_PAGE_SIZE));
         PagedResources<Resource<EventDto>> resources = assembler.toResource(eventDtos,
                 event -> new Resource<>(event, linkTo(EventController.class).slash(event.getId()).withSelfRel()),
                 linkTo(EventController.class).withSelfRel());
-        if (Objects.nonNull(apiAuth.getAccount())) {
-         resources.add(linkTo(EventController.class).withRel("create"));
+        if (!loginUser.isGuest()) {
+            resources.add(linkTo(EventController.class).withRel("create"));
         }
+
 
         resources.add(
                 linkTo(EventController.class).withSelfRel(),
@@ -55,8 +53,8 @@ public class EventController {
     }
 
     @PostMapping("")
-    public ResponseEntity<Resource<EventDetailDto>> createEvent(@RequestBody @Valid EventDto eventDto) {
-        EventDetailDto createdEventDto = eventService.create(eventDto);
+    public ResponseEntity<Resource<EventDetailDto>> createEvent(@RequestBody @Valid EventDto eventDto, @CurrentUser Account loginUser) {
+        EventDetailDto createdEventDto = eventService.create(eventDto, loginUser);
         Resource<EventDetailDto> resource = getEventResponseResource(createdEventDto);
 
         resource.add(
@@ -69,11 +67,11 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resource<EventDetailDto>> findById(@PathVariable("id") Long id) {
+    public ResponseEntity<Resource<EventDetailDto>> findById(@PathVariable("id") Long id, @CurrentUser Account loginUser) {
         EventDetailDto detailDto = eventService.findById(id);
         Resource<EventDetailDto> resource = getEventResponseResource(detailDto);
         //?
-        if (detailDto.getHostDto().toDomain().isSameHost(apiAuth.getAccount())) {
+        if (detailDto.getHostDto().toDomain().isSameHost(loginUser)) {
             resource.add(
                     linkTo(EventController.class).slash(detailDto.getId()).withRel("update"),
                     linkTo(EventController.class).slash(detailDto.getId()).withRel("delete"));
@@ -84,8 +82,8 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Resource<EventDetailDto>> modifyEvent(@PathVariable("id") Long id, @RequestBody @Valid EventDto eventDto) {
-        EventDetailDto event = eventService.modifyEvent(id, eventDto);
+    public ResponseEntity<Resource<EventDetailDto>> modifyEvent(@PathVariable("id") Long id, @RequestBody @Valid EventDto eventDto, @CurrentUser Account loginUser) {
+        EventDetailDto event = eventService.modifyEvent(id, eventDto, loginUser);
 
         Resource<EventDetailDto> resource = getEventResponseResource(event);
 
@@ -99,8 +97,8 @@ public class EventController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Resource<Long>> deleteEvent(@PathVariable("id") Long id) {
-        EventDto event = eventService.deleteEvent(id);
+    public ResponseEntity<Resource<Long>> deleteEvent(@PathVariable("id") Long id, @CurrentUser Account loginUser) {
+        EventDto event = eventService.deleteEvent(id, loginUser);
         Resource<Long> resource = new Resource<>(event.getId());
         resource.add(new Link("http://localhost:8080/docs/index.html#delete-event").withRel("profile"));
         resource.add(linkTo(EventController.class).withRel("events"));

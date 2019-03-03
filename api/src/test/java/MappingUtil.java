@@ -26,7 +26,7 @@ public abstract class MappingUtil {
 
     /**
      * @return a new default instance of MapperFactory, with the specified debug
-     * mode configuration.
+     * mode config.
      * @param debugMode if true, EclipseJdt will be used for the compiler
      * strategy (for step-debugging in IDEs), and class and source files will be written to disk.
      */

@@ -1,11 +1,11 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import me.toyproject.mia.persistence.ApiAuth;
 import org.springframework.data.domain.AuditorAware;
 
 import javax.annotation.Resource;
 import java.util.Optional;
-
+@Deprecated
 public class AuditorAwareImpl implements AuditorAware<String> {
     private final static String SYSTEM_USER = "SYSTEM";
 

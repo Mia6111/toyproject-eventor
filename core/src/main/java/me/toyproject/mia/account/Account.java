@@ -18,6 +18,7 @@ import java.util.Objects;
 @Entity
 @NoArgsConstructor @Getter @Setter @ToString
 public class Account extends AuditingEntity {
+    public static final Account GUEST = new Guest();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,6 +41,7 @@ public class Account extends AuditingEntity {
         this.id = id;
         this.email = email;
         this.name = name;
+        this.password = password;
     }
     @Builder
     public Account(Long id, String email, String name, String password, PasswordEncoder passwordEncoder) {
@@ -59,5 +61,16 @@ public class Account extends AuditingEntity {
 
     public boolean matchPassword(String password, PasswordEncoder passwordEncoder) {
         return passwordEncoder.matches(this.password, password);
+    }
+
+    public boolean isGuest(){
+        return false;
+    }
+
+    private static class Guest extends Account {
+        @Override
+        public boolean isGuest(){
+            return true;
+        }
     }
 }

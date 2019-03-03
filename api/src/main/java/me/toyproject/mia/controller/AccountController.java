@@ -1,7 +1,7 @@
 package me.toyproject.mia.controller;
 
 import lombok.AllArgsConstructor;
-import me.toyproject.mia.configuration.SessionUtils;
+import me.toyproject.mia.config.SessionUtils;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.service.AccountService;
 import org.springframework.util.Assert;
@@ -24,4 +24,5 @@ public class AccountController {
         final Account account = accountService.authenticate(requestBodyMap.get("email"), requestBodyMap.get("password"));
         SessionUtils.setUserSession(httpSession, account);
     }
+
 }

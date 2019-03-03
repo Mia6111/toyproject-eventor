@@ -1,4 +1,4 @@
-package me.toyproject.mia.configuration;
+package me.toyproject.mia.config;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;

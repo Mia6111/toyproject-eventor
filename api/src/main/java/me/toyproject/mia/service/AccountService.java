@@ -3,10 +3,14 @@ package me.toyproject.mia.service;
 import lombok.AllArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
 import me.toyproject.mia.account.Account;
+import me.toyproject.mia.account.AccountDetails;
 import me.toyproject.mia.account.AccountRepository;
 import me.toyproject.mia.account.HostDto;
 import me.toyproject.mia.exception.AccountCreateException;
 import me.toyproject.mia.exception.AccountLoginException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +18,7 @@ import javax.persistence.EntityNotFoundException;
 
 @Service
 @AllArgsConstructor
-public class AccountService {
+public class AccountService implements UserDetailsService {
     private AccountRepository accountRepository;
     private PasswordEncoder passwordEncoder;
     private MapperFacade orikaMapper;
@@ -48,4 +52,8 @@ public class AccountService {
     }
 
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return new AccountDetails(accountRepository.findByEmail(username).orElseThrow(EntityNotFoundException::new));
+    }
 }

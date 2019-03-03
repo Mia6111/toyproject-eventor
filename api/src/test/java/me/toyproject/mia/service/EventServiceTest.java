@@ -52,17 +52,14 @@ public class EventServiceTest {
     @Spy
     private static MapperFacade orikaMapperFacade;
 
-    @Mock(name= ApiAuth.REQUEST_SCOPE_BEAN_KEY)
-    private ApiAuth apiAuth;
-
-    private final Account account  = MockBuilder.constructAccount("abd@abd.com");
+    private final Account account = MockBuilder.constructAccount("abd@abd.com");
     private final Event e1 = MockBuilder.constructEvent(1L, "test1", account);
     private final Event e2 = MockBuilder.constructEvent(2L, "test2", account);
     private final Event enrolledEvents = MockBuilder.constructEvent(3L, "test3", account);
     private EventDto modifyDto;
 
     @BeforeClass
-    public static void init(){
+    public static void init() {
         MapperFactory factory = new DefaultMapperFactory.Builder()
                 .useBuiltinConverters(true)
                 .useAutoMapping(true)
@@ -71,13 +68,14 @@ public class EventServiceTest {
     }
 
     @Before
-    public void setup(){
-        given(apiAuth.getAccount()).willReturn(account);
+    public void setup() {
+
     }
+
     @Test
     public void 이벤트를_생성한다() {
         when(eventRepository.save(any(Event.class))).thenReturn(e1);
-        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
+        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1), account);
 
         log.debug("eventDto {}", createdEvent);
         assertThat(createdEvent.getId()).isNotNull();
@@ -87,7 +85,7 @@ public class EventServiceTest {
     public void 유효하지않은_이벤트를_생성할_경우_익셉션() {
         Event event = Event.builder()
                 .title(null).build();
-        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1));
+        EventDetailDto createdEvent = eventService.create(MockBuilder.createEventDtoFrom(e1), account);
     }
 
     @Test
@@ -120,11 +118,11 @@ public class EventServiceTest {
     }
 
     @Test
-    public void 특정_이벤트를_등록자가_수정한다(){
+    public void 특정_이벤트를_등록자가_수정한다() {
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
 
-        EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), modifyDto);
+        EventDetailDto eventDetailDto = eventService.modifyEvent(e1.getId(), modifyDto, account);
 
         assertThat(eventDetailDto.getId()).isEqualTo(e1.getId());
         assertThat(eventDetailDto.getTitle()).isEqualTo(modifyDto.getTitle());
@@ -136,7 +134,7 @@ public class EventServiceTest {
     }
 
     @Test
-    public void 특정이벤트를_등록자가_삭제한다(){
+    public void 특정이벤트를_등록자가_삭제한다() {
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
 
@@ -144,14 +142,14 @@ public class EventServiceTest {
         hostDto.setEmail(e1.getHost().getEmail());
 
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDto result = eventService.deleteEvent(e1.getId());
+        EventDto result = eventService.deleteEvent(e1.getId(), account);
 
         assertThat(result.getId()).isEqualTo(e1.getId());
     }
 
     @Test(expected = NotAuthorizedUserException.class)
-    public void 특정이벤트를_등록자가_아닌_다른이가_삭제할경우_에러(){
-        given(apiAuth.getAccount()).willReturn(new Account(6L, "any@email.com", "anyname", "pass123"));
+    public void 특정이벤트를_등록자가_아닌_다른이가_삭제할경우_에러() {
+        Account notHost = new Account(6L, "any@email.com", "anyname", "pass123");
         when(eventRepository.findById(anyLong())).thenReturn(Optional.of(e1));
         modifyDto = constructEventDto();
 
@@ -159,7 +157,7 @@ public class EventServiceTest {
         hostDto.setEmail("invalid@email.com");
 
         EventDetailDto detailDto = new EventDetailDto(e1.getId(), modifyDto, hostDto);
-        EventDto result = eventService.deleteEvent(e1.getId());
+        EventDto result = eventService.deleteEvent(e1.getId(), notHost);
     }
 
     private EventDto constructEventDto() {
@@ -173,7 +171,6 @@ public class EventServiceTest {
         modifyDto.setMaxPeopleCnt(e1.getMaxPeopleCnt() + 1);
         return modifyDto;
     }
-
 
 
 }
