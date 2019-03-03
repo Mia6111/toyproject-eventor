@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    include:
+    - core
+
+logging:
+  level:
+    org.springframework.security: debug
+
