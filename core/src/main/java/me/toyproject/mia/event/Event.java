@@ -1,5 +1,6 @@
 package me.toyproject.mia.event;
 
+import javax.validation.Valid;
 import lombok.*;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.exception.EventException;
@@ -16,9 +17,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity @Table(name = "event")
-@NoArgsConstructor(access = AccessLevel.PROTECTED) @Getter @Setter(AccessLevel.PRIVATE)
-@ToString @EqualsAndHashCode(callSuper = false)
-@Where(clause = "deleted = false")
+@NoArgsConstructor(access = AccessLevel.PROTECTED) @Getter
+@ToString @EqualsAndHashCode(callSuper = false, of = "id")
+@Where(clause = "deleted = 0")
 public class Event extends AuditingEntity {
     static final int MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD = 30;
     static final int MIN_DAYS_BEFORE_UPDATE = 7;
@@ -36,14 +37,15 @@ public class Event extends AuditingEntity {
             @AttributeOverride(column = @Column(name = "register_start_date"), name = "startDate"),
             @AttributeOverride(column = @Column(name = "register_end_date"), name = "endDate")
     })
-    @NotNull
+    @NotNull @Valid
     private Period registerOpenPeriod;
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(column = @Column(name = "event_start_date"), name = "startDate"),
             @AttributeOverride(column = @Column(name = "event_end_date"), name = "endDate")
     })
-    @NotNull
+    @NotNull @Valid
     private Period eventOpenPriod;
 
     @Column(nullable = false)

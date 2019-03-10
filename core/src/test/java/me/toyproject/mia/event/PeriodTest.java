@@ -1,6 +1,5 @@
 package me.toyproject.mia.event;
 
-import me.toyproject.mia.event.Period;
 import org.junit.Test;
 
 import java.time.Duration;
