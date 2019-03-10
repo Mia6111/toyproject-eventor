@@ -1,21 +1,19 @@
 package me.toyproject.mia.mock;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.account.AccountRepository;
 import me.toyproject.mia.event.Event;
 import me.toyproject.mia.event.EventRepository;
 import me.toyproject.mia.event.Period;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-@Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MockEntityHelper {
-    private EventRepository eventRepository;
-    private AccountRepository accountRepository;
+    private final EventRepository eventRepository;
+    private final AccountRepository accountRepository;
     public Event mockEvent(Account host){
         Period register = new Period(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(15));
         Period open = new Period(LocalDateTime.now().plusDays(20), LocalDateTime.now().plusDays(25));
