@@ -27,7 +27,7 @@ public class MockBuilder {
                 .build();
     }
     public static Account constructAccount(String email) {
-        return Account.builder().email(email).name("NAME").password("PASS").passwordEncoder(new BCryptPasswordEncoder()).build();
+        return Account.builder().email(email).name("NAME").password("PASS").mobile("01012341234").passwordEncoder(new BCryptPasswordEncoder()).build();
     }
     public static EventDto createEventDtoFrom(Event originalEvent) {
         EventDto modifyEventDto = new EventDto();

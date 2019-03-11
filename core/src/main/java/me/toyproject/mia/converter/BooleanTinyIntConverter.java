@@ -1,4 +1,4 @@
-package me.toyproject.mia.common;
+package me.toyproject.mia.converter;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
+import org.springframework.util.Assert;
 
 @Service
 @AllArgsConstructor
@@ -24,10 +25,16 @@ public class AccountService implements UserDetailsService {
     private MapperFacade orikaMapper;
 
     public HostDto findHostById(Long id) {
+        Assert.notNull(id, "id must not be null");
         Account account = accountRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         return orikaMapper.map(account, HostDto.class);
     }
 
+    protected Account findById(Long id) {
+        Assert.notNull(id, "id must not be null");
+        Account account = accountRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        return account;
+    }
     public Account create(String email, String name, String password) {
         accountRepository.findByEmail(email).ifPresent((account) -> {
             throw new AccountCreateException("중복 이메일이 존재 -" + account.getEmail());
@@ -38,6 +45,7 @@ public class AccountService implements UserDetailsService {
                 .name(name)
                 .password(password)
                 .passwordEncoder(passwordEncoder)
+                .mobile("01012341234")
                 .build();
 
         return accountRepository.save(account);
@@ -56,4 +64,6 @@ public class AccountService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return new AccountDetails(accountRepository.findByEmail(username).orElseThrow(EntityNotFoundException::new));
     }
+
+
 }

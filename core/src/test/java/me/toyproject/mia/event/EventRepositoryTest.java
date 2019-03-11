@@ -2,8 +2,10 @@ package me.toyproject.mia.event;
 
 import lombok.extern.slf4j.Slf4j;
 import me.toyproject.mia.CoreApplicatoin;
+import me.toyproject.mia.CoreTestApplicatoin;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.account.AccountRepository;
+import me.toyproject.mia.config.CoreTestConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,8 @@ public class EventRepositoryTest {
 	@Test
     public void test_create(){
 
-        Account account = Account.builder().email("abcdef@aa.com").name("테스트야").password("PASS").passwordEncoder(new BCryptPasswordEncoder()).build();
+        Account account =
+            Account.builder().email("abcdef@aa.com").name("테스트야").password("PASS").mobile("01012341234").passwordEncoder(new BCryptPasswordEncoder()).build();
         account = accountRepository.save(account);
         Period register = new Period(LocalDateTime.now().plus(Duration.ofDays(1)), LocalDateTime.now().plus(Duration.ofDays(3)));
         Period open = new Period(LocalDateTime.now().plus(Duration.ofDays(3)), LocalDateTime.now().plus(Duration.ofDays(5)));

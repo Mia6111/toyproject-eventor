@@ -1,6 +1,10 @@
 package me.toyproject.mia.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
+import me.toyproject.mia.account.UserNotificationMethod;
+import me.toyproject.mia.infra.NotificationEngine;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -30,5 +34,15 @@ public class ApiWebMvcConfig implements WebMvcConfigurer {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    public Map<UserNotificationMethod, NotificationEngine> notificationEngineMap(){
+        Map notificationEngineMap = new HashMap<UserNotificationMethod, NotificationEngine>();
+        notificationEngineMap.put(UserNotificationMethod.MOBILE_MSG, new NotificationEngine());
+        notificationEngineMap.put(UserNotificationMethod.EMAIL, new NotificationEngine());
+        return notificationEngineMap;
+
+    }
+
 
 }

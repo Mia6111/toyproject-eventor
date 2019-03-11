@@ -9,8 +9,10 @@ import me.toyproject.mia.event.Period;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
+import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
+@Component
 public class MockEntityHelper {
     private final EventRepository eventRepository;
     private final AccountRepository accountRepository;
@@ -30,7 +32,8 @@ public class MockEntityHelper {
         return eventRepository.save(e);
     }
     public Account mockAccount() {
-        Account a = Account.builder().email("mia@test.com").name("mia").password("PASS").passwordEncoder(new BCryptPasswordEncoder() {
+        Account a =
+            Account.builder().email("mia@test.com").name("mia").password("PASS").mobile("01012341234").passwordEncoder(new BCryptPasswordEncoder() {
         }).build();
         return accountRepository.save(a);
     }
