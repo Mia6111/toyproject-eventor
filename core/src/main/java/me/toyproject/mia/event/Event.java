@@ -1,5 +1,6 @@
 package me.toyproject.mia.event;
 
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import lombok.*;
 import me.toyproject.mia.account.Account;
@@ -67,6 +68,31 @@ public class Event extends AuditingEntity {
     @CollectionTable(name="event_guest_enrollments", joinColumns = @JoinColumn(name="id"))
     private Set<Long> enrolledGuestIds = new HashSet<>();
 
+    @Transient
+    private EventStatus eventStatus;
+
+
+    @PostConstruct @PostPersist
+    private void initEventStatus(){
+    	//todo : cancel 추가할것
+
+	    if(registerOpenPeriod.isOngoing(LocalDateTime.now())) {
+		    this.eventStatus = EventStatus.REGISTERING;
+		    return;
+	    }
+	    if(registerOpenPeriod.getEndDate().isAfter(LocalDateTime.now())){
+		    this.eventStatus = EventStatus.CLOSE_REGISTER;
+		    return;
+	    }
+        if(eventOpenPriod.isOngoing(LocalDateTime.now())){
+            this.eventStatus = EventStatus.OPENED;
+            return;
+        }
+        if(eventOpenPriod.getEndDate().isAfter(LocalDateTime.now())){
+	        this.eventStatus = EventStatus.FINISHED;
+	        return;
+        }
+    }
     @Builder
     public Event(Long id, String title, String content, Period registerOpenPeriod, Period eventOpenPriod, int maxPeopleCnt, int price, String location, Account host) {
         //?
@@ -101,7 +127,8 @@ public class Event extends AuditingEntity {
     }
 
     public boolean isRegisterOpen() {
-        return registerOpenPeriod.isOngoing(LocalDateTime.now());
+//        return registerOpenPeriod.isOngoing(LocalDateTime.now());
+	    return this.eventStatus == EventStatus.REGISTERING;
     }
 
     public void update(Event event){
@@ -156,14 +183,6 @@ public class Event extends AuditingEntity {
 
     }
 
-    public boolean enroll(Long accountId){
-        if(this.enrolledGuestIds.contains(accountId)){
-            return false;
-        }
-        this.enrolledGuestIds.add(accountId);
-        return true;
-    }
-
     boolean isDeletable() {
         return this.enrolledGuestIds.size() == 0;
     }
@@ -176,5 +195,34 @@ public class Event extends AuditingEntity {
             throw new EventException("삭제할 수 없습니다");
         }
         super.delete();
+    }
+    // by entity id or entity?
+//    public boolean enroll(Long accountId){
+//        if(isRegisterAvaiable()){
+//            return false;
+//        }
+//        if(this.enrolledGuestIds.contains(accountId)){
+//            return false;
+//        }
+//        this.enrolledGuestIds.add(accountId);
+//        return true;
+//    }
+
+    public boolean enroll(Account account){
+        if(!isRegisterAvaiable()){
+            return false;
+        }
+        if(enrolledGuestIds.contains(account.getId())){
+            return false;
+        }
+        if(account.isGuest()){
+        	return false;
+        }
+        this.enrolledGuestIds.add(account.getId());
+        return true;
+    }
+
+    private boolean isRegisterAvaiable() {
+        return this.eventStatus != EventStatus.CLOSE_REGISTER && enrolledGuestIds.size() < maxPeopleCnt;
     }
 }
