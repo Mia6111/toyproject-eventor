@@ -1,4 +1,5 @@
 package me.toyproject.mia.persistence;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -6,10 +7,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 @Component
-public class ApiAuthFinder implements ApplicationContextAware {
+public class RequestAuthFinderImpl implements ApplicationContextAware, AuthFinder {
     private static ApplicationContext applicationContext;
-
-    private static final String SYSTEM_USER = "SYSTEM";
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -20,13 +19,14 @@ public class ApiAuthFinder implements ApplicationContextAware {
         }
     }
 
-    public static ApiAuth getRequestAuthInfo() {
+    @Override
+    public AuthByAccount getAuth() {
         try {
-            ApiAuth apiAuth = applicationContext.getBean(ApiAuth.REQUEST_SCOPE_BEAN_KEY, ApiAuth.class);
-            if (Objects.isNull(apiAuth) || Objects.isNull(apiAuth.getAccount())) {
+            AuthByAccount authByAccount = applicationContext.getBean(AuthByAccount.REQUEST_SCOPE_BEAN_KEY, AuthByAccount.class);
+            if (Objects.isNull(authByAccount) || Objects.isNull(authByAccount.getAccount())) {
                 return null;
             }
-            return apiAuth;
+            return authByAccount;
         } catch (Exception e) {
             return null;
         }

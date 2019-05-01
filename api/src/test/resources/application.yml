@@ -1,0 +1,15 @@
+
+spring:
+  profiles:
+    active: test
+    include:
+    - core
+---
+#
+#logging:
+#  level:
+#    org.springframework:
+#      security: warn
+#      orm.jpa: DEBUG
+#      transaction: DEBUG
+#    org.hibernate.engine.jdbc.internal: DEBUG

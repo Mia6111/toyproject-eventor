@@ -1,0 +1,26 @@
+# default
+logging:
+  level:
+    root: warn
+    me.toyproject.mia: debug
+    org.springframework:
+      security: warn
+      orm.jpa: warn
+      transaction: warn
+    org.hibernate.engine.jdbc.internal: warn
+spring:
+  profiles:
+    include: core
+---
+spring:
+  profiles: test
+logging:
+  level:
+    root: warn
+    me.toyproject.mia: debug
+    org.springframework:
+      security: warn
+      orm.jpa: debug
+      transaction: debug
+    org.hibernate.engine.jdbc.internal: debug
+
