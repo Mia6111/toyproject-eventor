@@ -6,7 +6,8 @@ import javax.persistence.Convert;
 import lombok.*;
 import me.toyproject.mia.converter.UserNotificationMethodConverter;
 import me.toyproject.mia.exception.AccountException;
-import me.toyproject.mia.persistence.AuditingEntity;
+import me.toyproject.mia.persistence.audit.AuditingEntity;
+import org.hibernate.envers.Audited;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 
@@ -20,6 +21,7 @@ import java.util.Objects;
 
 @Entity
 @NoArgsConstructor @Getter @Setter @ToString
+@Audited
 public class Account extends AuditingEntity {
     public static final Account GUEST = new Guest();
     @Id

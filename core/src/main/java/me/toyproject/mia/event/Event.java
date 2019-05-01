@@ -6,9 +6,10 @@ import lombok.*;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.exception.EventException;
 import me.toyproject.mia.exception.NotAuthorizedUserException;
-import me.toyproject.mia.persistence.AuditingEntity;
+import me.toyproject.mia.persistence.audit.AuditingEntity;
 import org.apache.commons.lang3.ObjectUtils;
-import org.hibernate.annotations.Where;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.Audited;
 import org.springframework.util.Assert;
 
 import javax.persistence.*;
@@ -20,7 +21,9 @@ import java.util.Set;
 @Entity @Table(name = "event")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) @Getter
 @ToString @EqualsAndHashCode(callSuper = false, of = "id")
-@Where(clause = "deleted = 0")
+
+@Audited
+@AuditOverride(forClass=AuditingEntity.class)
 public class Event extends AuditingEntity {
     static final int MAX_DURATION_BETWEEN_REGISTER_AND_OPEN_PERIOD = 30;
     static final int MIN_DAYS_BEFORE_UPDATE = 7;
