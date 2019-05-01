@@ -6,6 +6,7 @@ import me.toyproject.mia.account.AccountDetails;
 import me.toyproject.mia.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,6 +25,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@ConditionalOnWebApplication
 @Slf4j
 public class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.csrf-enabled:true}")
@@ -37,6 +39,7 @@ public class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .formLogin()
                 .loginPage("/login").permitAll()
+                .loginPage("/api/v1/accounts/login").permitAll()//why not working?
                 .defaultSuccessUrl("/")
                 .failureUrl("/error")
                 .and()
@@ -46,6 +49,7 @@ public class ApiWebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(restAuthenticationEntryPoint())
                 .and()
                 .authorizeRequests()
+                .mvcMatchers(HttpMethod.POST,"api/v1/accounts/login").permitAll()
                 .mvcMatchers(HttpMethod.POST,"api/v1/**").hasAnyRole("USER")
                 .mvcMatchers(HttpMethod.PUT,"api/v1/**").hasAnyRole("USER")
                 .mvcMatchers(HttpMethod.DELETE,"api/v1/**").hasAnyRole("USER")

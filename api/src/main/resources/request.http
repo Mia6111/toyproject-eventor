@@ -5,12 +5,16 @@
 # * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
 
+
+
+###
+
 POST localhost:8080/api/v1/accounts/login
 Content-Type: application/json
 
 {
   "email": "test@abc.com",
-  "password": "1"
+  "password": "$2a$10$A3zMoDdS6EUD8n97tekT1./izhO2SrVRDD9Bl2nNKf7r.GhATa8j6"
 }
 > {%
 client.global.set("JSESSIONID", response.headers.valueOf("Set-Cookie").split(";")[0].split("=")[1]);
@@ -20,7 +24,8 @@ client.log("쿠키: "+client.global.get("JSESSIONID"));
 ###
 
 GET localhost:8080/api/v1/events/1
-Cookie: JSESSIONID={{JSESSIONID}}
+Cookie: JSESSIONID=0E505544F78C2055FC2CD72E773E491B
+
 
 ###
 ###
@@ -33,7 +38,7 @@ GET http://localhost:8080/api/v1/events/1
 ###
 
 POST localhost:8080/api/v1/events
-Cookie: JSESSIONID={{JSESSIONID}}
+Cookie: JSESSIONID={{JSESSIONID}}; Path=/api/v1/accounts/login/; HttpOnly
 Content-Type: application/json
 
 {

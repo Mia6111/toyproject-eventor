@@ -3,7 +3,6 @@ package me.toyproject.mia.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import me.toyproject.mia.account.Account;
-import me.toyproject.mia.account.AccountDetails;
 import me.toyproject.mia.account.AccountRepository;
 import me.toyproject.mia.common.AbstractApiBaseIntegrationTest;
 import me.toyproject.mia.common.AccountInitializingBean;
@@ -11,7 +10,7 @@ import me.toyproject.mia.event.EventDetailDto;
 import me.toyproject.mia.event.Event;
 import me.toyproject.mia.event.EventRepository;
 import me.toyproject.mia.event.Period;
-import me.toyproject.mia.mock.MockEntityHelper;
+import me.toyproject.mia.mock.ApiMockEntityHelper;
 import me.toyproject.mia.event.EventDto;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Before;
@@ -60,7 +59,7 @@ public class EventControllerTest extends AbstractApiBaseIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private MockEntityHelper mockEntityHelper;
+    private ApiMockEntityHelper mockEntityHelper;
 
     private Event event;
     private static Account account;

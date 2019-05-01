@@ -2,10 +2,9 @@ package me.toyproject.mia.event;
 
 import lombok.extern.slf4j.Slf4j;
 import me.toyproject.mia.CoreApplicatoin;
-import me.toyproject.mia.CoreTestApplicatoin;
 import me.toyproject.mia.account.Account;
 import me.toyproject.mia.account.AccountRepository;
-import me.toyproject.mia.config.CoreTestConfiguration;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

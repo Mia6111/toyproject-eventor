@@ -6,6 +6,7 @@ import me.toyproject.mia.account.AccountRepository;
 import me.toyproject.mia.event.Event;
 import me.toyproject.mia.event.EventRepository;
 import me.toyproject.mia.event.Period;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class MockEntityHelper {
+public class ApiMockEntityHelper {
     private final EventRepository eventRepository;
     private final AccountRepository accountRepository;
     public Event mockEvent(Account host){

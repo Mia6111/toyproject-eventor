@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.persistence.AttributeConverter;
 import me.toyproject.mia.account.UserNotificationMethod;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 public class UserNotificationMethodConverter implements AttributeConverter<Set<UserNotificationMethod>, String>{
@@ -22,6 +23,9 @@ public class UserNotificationMethodConverter implements AttributeConverter<Set<U
 
 	@Override
 	public Set<UserNotificationMethod> convertToEntityAttribute(String dbData) {
+		if(StringUtils.isBlank(dbData)){
+			return EnumSet.noneOf(UserNotificationMethod.class);
+		}
 		return Arrays.stream(dbData.split(DELIMITER)).map(UserNotificationMethod::valueOf)
 			.collect(Collectors.toCollection(() -> EnumSet.noneOf(UserNotificationMethod.class)));
 	}
